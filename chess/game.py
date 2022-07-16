@@ -48,9 +48,9 @@ class ChessGame:
         elif piece == "Bishop" and color == "b":
             squares = self.getPossibleBishopMoves(square, isWhite=False)
         elif piece == "Queen" and color == "w":
-            squares = []
+            squares = self.getPossibleQueenMoves(square)
         elif piece == "Queen" and color == "b":
-            squares = []
+            squares = self.getPossibleQueenMoves(square, isWhite=False)
         elif piece == "King" and color == "w":
             squares = []
         elif piece == "King" and color == "b":
@@ -256,3 +256,11 @@ class ChessGame:
                                 squares.append(sq)
                         break
         return squares
+
+    def getPossibleQueenMoves(self, square: Square, isWhite = True):
+        """Get all possible queen moves"""
+        bishopMoves = self.getPossibleBishopMoves(square, isWhite=isWhite)
+        rookMoves = self.getPossibleRookMoves(square, isWhite=isWhite)
+        bishopMoves.extend(rookMoves)
+        return bishopMoves
+        

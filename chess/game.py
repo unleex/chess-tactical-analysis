@@ -40,9 +40,9 @@ class ChessGame:
         elif piece == "Rook" and color == "b":
             squares = self.getPossibleRookMoves(square, isWhite=False)
         elif piece == "Knight" and color == "w":
-            squares = []
+            squares = self.getPossibleKnightMoves(square)
         elif piece == "Knight" and color == "b":
-            squares = []
+            squares = self.getPossibleKnightMoves(square, isWhite=False)
         elif piece == "Bishop" and color == "w":
             squares = []
         elif piece == "Bishop" and color == "b":
@@ -192,4 +192,37 @@ class ChessGame:
             
             squares.append(sq)
 
+        return squares
+
+    def getPossibleKnightMoves(self, square: Square, isWhite = True):
+        """Get all possible moves for a knight"""
+        l, n = square.getName()
+        n = int(n)
+        cp = ord(l)
+        squares = []
+
+        # At most eight possible moves for a knight, just check them all.
+        sqs = (
+            self.squares.get(f"{chr(cp+1)}{n+2}"),
+            self.squares.get(f"{chr(cp+2)}{n+1}"),
+            self.squares.get(f"{chr(cp+2)}{n-1}"),
+            self.squares.get(f"{chr(cp+1)}{n-2}"),
+            self.squares.get(f"{chr(cp-1)}{n+2}"),
+            self.squares.get(f"{chr(cp-2)}{n+1}"),
+            self.squares.get(f"{chr(cp-2)}{n-1}"),
+            self.squares.get(f"{chr(cp-1)}{n-2}"))
+
+        for sq in sqs:
+            if sq is None:
+                continue
+            if not sq.hasPiece():
+                squares.append(sq)
+            else:
+                if isWhite:
+                    if sq.hasBlackPiece():
+                        squares.append(sq)
+                else:
+                    if sq.hasWhitePiece():
+                        squares.append(sq)
+        
         return squares

@@ -37,7 +37,7 @@ class BoardScene(QGraphicsScene):
 
     INITIAL_POS = {
         "wRook": ("a1", "h1"),
-        "wKnight": ("c6", "g1"),
+        "wKnight": ("b1", "g1"),
         "wBishop": ("c1", "f1"),
         "wQueen": ("d1",),
         "wKing": ("e1",),

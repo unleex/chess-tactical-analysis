@@ -44,9 +44,9 @@ class ChessGame:
         elif piece == "Knight" and color == "b":
             squares = self.getPossibleKnightMoves(square, isWhite=False)
         elif piece == "Bishop" and color == "w":
-            squares = []
+            squares = self.getPossibleBishopMoves(square)
         elif piece == "Bishop" and color == "b":
-            squares = []
+            squares = self.getPossibleBishopMoves(square, isWhite=False)
         elif piece == "Queen" and color == "w":
             squares = []
         elif piece == "Queen" and color == "b":
@@ -225,4 +225,34 @@ class ChessGame:
                     if sq.hasWhitePiece():
                         squares.append(sq)
         
+        return squares
+
+    def getPossibleBishopMoves(self, square: Square, isWhite = True):
+        """Get all possible bishop moves"""
+        l, n = square.getName()
+        n = int(n)
+        cp = ord(l)
+        squares = []
+
+        # Each tuple represents a diagonal and how the letter and number of
+        # a square changes on that diagonal. (-1, 1) says go back one
+        # letter and go up one number (eg. e4->d5), and that is the diagonal
+        # pointing to the top left
+        changes = ((-1, 1), (1, 1), (1, -1), (-1, -1))
+
+        for c in changes:
+            for i in range(1, 8):
+                sq = self.squares.get(f"{chr(cp+c[0]*i)}{n+c[1]*i}")
+                if sq is None:
+                    break
+                else:
+                    if not sq.hasPiece():
+                        squares.append(sq)
+                    else:
+                        if isWhite and sq.hasBlackPiece():
+                            squares.append(sq)
+                        else:
+                            if (not isWhite) and sq.hasWhitePiece():
+                                squares.append(sq)
+                        break
         return squares

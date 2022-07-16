@@ -1,17 +1,28 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from board import Square
+    from board import Square, BoardView
 
-class ChessGame:
+from PySide6.QtWidgets import QWidget, QHBoxLayout
+from PySide6.QtCore import Qt
+
+
+class ChessGame(QWidget):
+    
+    def __init__(self, board: BoardView, parent=None, f=Qt.WindowFlags()):
+        super().__init__(parent, f)
+        self.layout = QHBoxLayout()
+        self.layout.setContentsMargins(0,0,0,0)
+        self.layout.addWidget(board)
+        self.setLayout(self.layout)
+
+
+class PieceMovements:
 
     def __init__(self):
         # BoardScene will create the squares and call setSquares() to 
-        # give a reference to them to ChessGame
+        # give PieceMovements a reference to squares as well.
         self.squares = None
-
-        # Some game variables
-        self.turn = 1
 
     def setSquares(self, squares):
         self.squares = squares

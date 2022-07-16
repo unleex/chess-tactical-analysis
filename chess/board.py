@@ -1,5 +1,5 @@
 import sys
-from game import ChessGame
+from game import PieceMovements
 import resources
 from PySide6.QtCore import (Qt, Slot, QSize, QSizeF, QRectF, QRect,
     QPointF)
@@ -26,7 +26,9 @@ class BoardView(QGraphicsView):
         self.setGeometry(
             0, 0, self.VIEW_SIZE.width(), self.VIEW_SIZE.height())
         self.setMinimumSize(self.VIEW_SIZE)
-        self.setMaximumSize(self.VIEW_SIZE)
+
+        scene = BoardScene(PieceMovements())
+        self.setScene(scene)
 
         
 class BoardScene(QGraphicsScene):
@@ -50,7 +52,7 @@ class BoardScene(QGraphicsScene):
         "bPawn": ("a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7"),
     }
 
-    def __init__(self, game: ChessGame, parent: QWidget = None):
+    def __init__(self, game: PieceMovements, parent: QWidget = None):
         super().__init__(parent)
         self.setSceneRect(
             5, 5, self.SCENE_SIZE.width(), self.SCENE_SIZE.height())

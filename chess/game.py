@@ -1,12 +1,14 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QFrame
 from PySide6.QtCore import Qt
 from board import BoardView
+from movement import PieceMovements
 
 class ChessGame(QWidget):
     
     def __init__(self, parent=None, f=Qt.WindowFlags()):
         super().__init__(parent, f)
 
+        self.movement = PieceMovements()
         self.board = BoardView()
         self.gameInfo = GameInfo()
 

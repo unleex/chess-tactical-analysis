@@ -156,7 +156,7 @@ class Square(QGraphicsRectItem):
         this function will highlight the squares that the piece can move
         to."""
         if self.hasPiece():
-            squares = self.scene().game.getPossibleSquares(self)
+            squares = self.scene().game.movement.getPossibleSquares(self)
             self.scene().highlightSquares(squares)
         return super().mousePressEvent(event)
 

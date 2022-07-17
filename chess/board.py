@@ -1,5 +1,5 @@
 import sys
-from game import PieceMovements
+from movement import PieceMovements
 import resources
 from PySide6.QtCore import (Qt, Slot, QSize, QSizeF, QRectF, QRect,
     QPointF)
@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (QApplication, QGraphicsScene,
     QGraphicsLayoutItem, QGraphicsItem, QWidget,
     QGraphicsWidget, QTextEdit, QPushButton,
     QLabel, QGraphicsPixmapItem)
-from PySide6.QtWidgets import (QGraphicsSceneMouseEvent)
+from PySide6.QtWidgets import QGraphicsSceneMouseEvent
 
 
 # Create a list with the names of each square starting from 

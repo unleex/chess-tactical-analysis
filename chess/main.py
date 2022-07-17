@@ -1,7 +1,6 @@
 import sys
 from board import BoardView, BoardScene
-from game import PieceMovements, ChessGame
-
+from game import ChessGame
 from PySide6.QtWidgets import (QApplication, QWidget, QPushButton, QVBoxLayout,
                                QSizePolicy)
 from PySide6.QtCore import Qt
@@ -13,7 +12,6 @@ class MainWindow(QWidget):
         super().__init__(parent, f)
         self.setWindowTitle("Maxwell's Chess Game")
         self.setWindowState(Qt.WindowMaximized)
-        self.setStyleSheet("background-color: blue")
 
         # ChessGame reference
         self.currentGame = None
@@ -29,7 +27,7 @@ class MainWindow(QWidget):
         
     def startNewGame(self):
         self.emptyWindow()
-        self.currentGame = ChessGame(BoardView())
+        self.currentGame = ChessGame()
         # Add game screen to window
         self.mainLayout.addWidget(self.currentGame)
 

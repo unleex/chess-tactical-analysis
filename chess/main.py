@@ -8,8 +8,8 @@ from PySide6.QtCore import Qt
 
 class MainWindow(QWidget):
 
-    def __init__(self, parent=None, f=Qt.WindowFlags()):
-        super().__init__(parent, f)
+    def __init__(self):
+        super().__init__()
         self.setWindowTitle("Maxwell's Chess Game")
         self.setWindowState(Qt.WindowMaximized)
 

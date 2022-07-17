@@ -1,5 +1,8 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from movement import PieceMovements
 import sys
-from movement import PieceMovements
 import resources
 from PySide6.QtCore import (Qt, Slot, QSize, QSizeF, QRectF, QRect,
     QPointF)
@@ -21,13 +24,13 @@ class BoardView(QGraphicsView):
 
     VIEW_SIZE = QSize(600, 600)
 
-    def __init__(self, parent: QWidget = None):
-        super().__init__(parent)
+    def __init__(self, movement: PieceMovements):
+        super().__init__()
         self.setGeometry(
             0, 0, self.VIEW_SIZE.width(), self.VIEW_SIZE.height())
         self.setMinimumSize(self.VIEW_SIZE)
 
-        scene = BoardScene(PieceMovements())
+        scene = BoardScene(movement)
         self.setScene(scene)
 
         
@@ -52,14 +55,14 @@ class BoardScene(QGraphicsScene):
         "bPawn": ("a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7"),
     }
 
-    def __init__(self, game: PieceMovements, parent: QWidget = None):
-        super().__init__(parent)
+    def __init__(self, movement: PieceMovements):
+        super().__init__()
         self.setSceneRect(
             5, 5, self.SCENE_SIZE.width(), self.SCENE_SIZE.height())
 
         # 'game' attribute is the object handling the actual mechanics
         # of a chess game. Only used to set mouse events for the squares
-        self.game = game
+        self.movement = movement
         # Create the squares.
         self.squares = self.createSquares()
         # Draw the board
@@ -99,9 +102,9 @@ class BoardScene(QGraphicsScene):
                 else:
                     squares[name] = Square(
                         rect=rect, color=Qt.black, name=name)
-        
-        # Give references to squares to game as well
-        self.game.setSquares(squares)
+
+        # Give PieceMovements reference to squares
+        self.movement.setSquares(squares)
         return squares
 
     def drawBoard(self):
@@ -140,9 +143,8 @@ class BoardScene(QGraphicsScene):
 class Square(QGraphicsRectItem):
     """Represents a square on the chess board"""
 
-    def __init__(self, rect: QRectF, color: Qt.GlobalColor, name: str, 
-                 parent: QWidget = None):
-        super().__init__(rect, parent)
+    def __init__(self, rect: QRectF, color: Qt.GlobalColor, name: str):
+        super().__init__(rect)
         # Set coordinate name
         self.name = name
 
@@ -156,7 +158,7 @@ class Square(QGraphicsRectItem):
         this function will highlight the squares that the piece can move
         to."""
         if self.hasPiece():
-            squares = self.scene().game.movement.getPossibleSquares(self)
+            squares = self.scene().movement.getPossibleSquares(self)
             self.scene().highlightSquares(squares)
         return super().mousePressEvent(event)
 

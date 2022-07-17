@@ -1,17 +1,22 @@
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QFrame, QLabel,
                                QGridLayout, QVBoxLayout)
 from PySide6.QtCore import Qt
-from board import BoardView
+from board import BoardView, Square
 from movement import PieceMovements
+from interface import BoardToGameInterface
 
 class ChessGame(QWidget):
     
     def __init__(self):
         super().__init__()
 
-        self.movement = PieceMovements()
-        self.board = BoardView(self.movement)
+        BoardToGameInterface.setCurrentGame(self)
+        self.board = BoardView()
         self.gameInfo = GameInfo()
+        self.movement = PieceMovements()
+
+        self.squares = self.board.getSquares()
+        self.movement.setSquares(self.squares)
 
         self.layout = QHBoxLayout()
         self.layout.setContentsMargins(0,0,0,0)
@@ -20,6 +25,9 @@ class ChessGame(QWidget):
         self.layout.addWidget(self.gameInfo, stretch=1)
         self.setLayout(self.layout)
 
+    def getPossibleSquares(self, square: Square):
+        squares = self.movement.getPossibleSquares(square)
+        return squares
 
 class GameInfo(QFrame):
 

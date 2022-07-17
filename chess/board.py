@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (QApplication, QGraphicsScene,
     QGraphicsWidget, QTextEdit, QPushButton,
     QLabel, QGraphicsPixmapItem)
 from PySide6.QtWidgets import QGraphicsSceneMouseEvent
+from interface import BoardToGameInterface
 
 
 # Create a list with the names of each square starting from 
@@ -24,14 +25,17 @@ class BoardView(QGraphicsView):
 
     VIEW_SIZE = QSize(600, 600)
 
-    def __init__(self, movement: PieceMovements):
+    def __init__(self):
         super().__init__()
         self.setGeometry(
             0, 0, self.VIEW_SIZE.width(), self.VIEW_SIZE.height())
         self.setMinimumSize(self.VIEW_SIZE)
 
-        scene = BoardScene(movement)
+        scene = BoardScene()
         self.setScene(scene)
+
+    def getSquares(self):
+        return self.scene().squares
 
         
 class BoardScene(QGraphicsScene):
@@ -55,14 +59,11 @@ class BoardScene(QGraphicsScene):
         "bPawn": ("a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7"),
     }
 
-    def __init__(self, movement: PieceMovements):
+    def __init__(self):
         super().__init__()
         self.setSceneRect(
             5, 5, self.SCENE_SIZE.width(), self.SCENE_SIZE.height())
 
-        # 'game' attribute is the object handling the actual mechanics
-        # of a chess game. Only used to set mouse events for the squares
-        self.movement = movement
         # Create the squares.
         self.squares = self.createSquares()
         # Draw the board
@@ -103,8 +104,6 @@ class BoardScene(QGraphicsScene):
                     squares[name] = Square(
                         rect=rect, color=Qt.black, name=name)
 
-        # Give PieceMovements reference to squares
-        self.movement.setSquares(squares)
         return squares
 
     def drawBoard(self):
@@ -158,7 +157,7 @@ class Square(QGraphicsRectItem):
         this function will highlight the squares that the piece can move
         to."""
         if self.hasPiece():
-            squares = self.scene().movement.getPossibleSquares(self)
+            squares = BoardToGameInterface.getPossibleSquares(self)
             self.scene().highlightSquares(squares)
         return super().mousePressEvent(event)
 

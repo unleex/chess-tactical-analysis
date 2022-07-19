@@ -11,12 +11,21 @@ class ChessGame(QWidget):
         super().__init__()
 
         BoardToGameInterface.setCurrentGame(self)
+
+        # Widgets
         self.board = BoardView()
         self.gameInfo = GameInfo()
-        self.movement = PieceMovements()
-
+        
+        # Get squares and give a reference to them to PieceMovements
         self.squares = self.board.getSquares()
+        self.movement = PieceMovements()
         self.movement.setSquares(self.squares)
+
+        # Game variables
+        self.turn = 0
+        self.whiteTurn = True
+        self.selectedSquare = None
+        self.possibleSquares = None
 
         self.layout = QHBoxLayout()
         self.layout.setContentsMargins(0,0,0,0)
@@ -25,9 +34,32 @@ class ChessGame(QWidget):
         self.layout.addWidget(self.gameInfo, stretch=1)
         self.setLayout(self.layout)
 
+    def selectSquare(self, square: Square):
+        """Saves square and its piece as the selected square and
+        returns squares that the piece can go to."""
+        self.selectedSquare = square
+        self.possibleSquares = self.getPossibleSquares(square)
+        return self.possibleSquares
+
     def getPossibleSquares(self, square: Square):
-        squares = self.movement.getPossibleSquares(square)
-        return squares
+        if (self.whiteTurn and square.hasWhitePiece() 
+                or (not self.whiteTurn) and square.hasBlackPiece()):
+            return self.movement.getPossibleSquares(square)
+        return []
+
+    def moveToSquare(self, newSquare: Square):
+        """Move piece in selected square to passed in square. Changes
+        attributes of the squares to reflect the move, and returns the
+        squares to allow the BoardView to redraw the piece."""
+        if newSquare in self.possibleSquares:
+            prevSquare = self.selectedSquare
+            self.selectedSquare = None
+            self.possibleSquares = []
+            self.whiteTurn = True if self.whiteTurn is False else False
+            newSquare.setPiece(prevSquare.getPiece())
+            prevSquare.setPiece(None)
+            return newSquare, prevSquare
+        
 
 class GameInfo(QFrame):
 

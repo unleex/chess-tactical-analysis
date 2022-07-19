@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tkinter.messagebox import NO
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from movement import PieceMovements
@@ -122,6 +123,15 @@ class BoardScene(QGraphicsScene):
                 imgItem.setOffset(sq.getCoord())
                 # Let square know what piece it has
                 sq.setPiece(piece)
+                sq.setPiecePixmap(imgItem)
+
+    def drawPieceOnNewSquare(self, newSquare: Square, prevSquare: Square):
+        """Removes piece from prevSquare and draws it on newSquare"""
+        piecePixmap = prevSquare.getPiecePixmap()
+        newSquare.setPiecePixmap(piecePixmap)
+        piecePixmap.setOffset(newSquare.getCoord())  # This redraws the piece
+        prevSquare.setPiecePixmap(None)
+        self.highlightSquares([])  # Unhighlights squares
 
     def getSquares(self) -> dict:
         return self.squares
@@ -157,8 +167,14 @@ class Square(QGraphicsRectItem):
         this function will highlight the squares that the piece can move
         to."""
         if self.hasPiece():
-            squares = BoardToGameInterface.getPossibleSquares(self)
+            squares = BoardToGameInterface.selectSquare(self)
             self.scene().highlightSquares(squares)
+        else:
+            squares = BoardToGameInterface.moveToSquare(self)
+            if squares is not None:
+                newSquare, prevSquare = squares
+                self.scene().drawPieceOnNewSquare(newSquare, prevSquare)
+
         return super().mousePressEvent(event)
 
     def setPiece(self, piece: str):
@@ -166,6 +182,12 @@ class Square(QGraphicsRectItem):
 
     def getPiece(self):
         return self.piece
+
+    def setPiecePixmap(self, pixmap: QGraphicsPixmapItem):
+        self.piecePixmap = pixmap
+
+    def getPiecePixmap(self):
+        return self.piecePixmap
 
     def getName(self):
         return self.name

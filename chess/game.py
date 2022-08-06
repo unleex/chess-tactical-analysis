@@ -18,6 +18,8 @@ class ChessGame(QWidget):
         
         # Get squares and give a reference to them to PieceMovements
         self.squares = self.board.getSquares()
+        
+        # Class that provides squares that a piece can move to
         self.movement = PieceMovements()
         self.movement.setSquares(self.squares)
 

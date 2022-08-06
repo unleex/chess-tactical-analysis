@@ -28,7 +28,7 @@ class PieceMovements:
         """Called when a square is clicked. Looks at the piece on the 
         square and returns a list of possible squares it can move to."""
         pieceOnSquare = square.getPiece()
-        piece, color = pieceOnSquare[1:], pieceOnSquare[:1]
+        piece, color = pieceOnSquare[1:-1], pieceOnSquare[:1]
         if pieceOnSquare is None:
             return
 

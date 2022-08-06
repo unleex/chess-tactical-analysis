@@ -111,15 +111,16 @@ class BoardScene(QGraphicsScene):
 
     def drawPiecesInInitialPos(self):
         """Draw the pieces in their initial positions"""
+        # These ids are appened to the piece's name so that they're unique
         for piece in self.INITIAL_POS:
             img = QPixmap(f":pieces\\{piece}")
-            for pos in self.INITIAL_POS[piece]:
+            for id_, pos in enumerate(self.INITIAL_POS[piece]):
                 imgItem = self.addPixmap(img)
                 sq = self.squares[pos]
                 # Use coordinates of square to position the piece
                 imgItem.setOffset(sq.getCoord())
                 # Let square know what piece it has
-                sq.setPiece(piece)
+                sq.setPiece(piece + str(id_))
                 sq.setPiecePixmap(imgItem)
 
     def drawPieceOnNewSquare(self, newSquare: Square, prevSquare: Square):

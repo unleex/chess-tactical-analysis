@@ -29,6 +29,12 @@ class BoardToGameInterface:
 
     @classmethod
     def moveToSquare(cls, square: Square):
-        """Called when an empty square is clicked. Checks if a selected
-        piece can move to it."""
+        """Called when an empty square or an enemy piece is clicked. 
+        Checks if a selected piece can move to it."""
         return cls.CURRENT_GAME.moveToSquare(square)
+
+    @classmethod
+    def isWhiteTurn(cls):
+        """Called by Squares when they are clicked and want to know if
+        they're the enemy piece"""
+        return cls.CURRENT_GAME.whiteTurn

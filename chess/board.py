@@ -172,6 +172,7 @@ class Square(QGraphicsRectItem):
         self.name = name
 
         self.piece = None
+        self.piecePixmap = None
 
         # Set color of the square
         self.setBrush(QBrush(color))
@@ -180,9 +181,15 @@ class Square(QGraphicsRectItem):
         """When a square is clicked and there is a piece on that square,
         this function will highlight the squares that the piece can move
         to."""
-        if self.hasPiece():
+        whiteTurn = BoardToGameInterface.isWhiteTurn()
+        # If it is your colors turn, then simply check for what squares
+        # this piece can move to
+        if ((self.hasWhitePiece() and whiteTurn) 
+            or (self.hasBlackPiece() and (not whiteTurn))):
             squares = BoardToGameInterface.selectSquare(self)
             self.scene().highlightSquares(squares)
+        # If not, this square is either empty or occupied by enemy piece,
+        # so check if piece can move or capture to this square.
         else:
             squares = BoardToGameInterface.moveToSquare(self)
             if squares is not None:
@@ -199,6 +206,12 @@ class Square(QGraphicsRectItem):
 
     def setPiecePixmap(self, pixmap: QGraphicsPixmapItem):
         """Gives pixmap item of the piece to the square"""
+        # If pixmap is not None, then a piece has entered this square
+        # and a reference to its pixmap is being given. If there was
+        # a piece on this square that was captured, its pixmap needs
+        # to be deleted off the board first.g
+        if pixmap is not None:
+            self.scene().removeItem(self.piecePixmap)
         self.piecePixmap = pixmap
 
     def getPiecePixmap(self):

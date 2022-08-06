@@ -129,9 +129,12 @@ class BoardScene(QGraphicsScene):
         """Removes piece from prevSquare and draws it on newSquare"""
         piecePixmap = prevSquare.getPiecePixmap()
         newSquare.setPiecePixmap(piecePixmap)
-        piecePixmap.setOffset(newSquare.getCoord())  # This redraws the piece
+        piecePixmap.setOffset(newSquare.getCoord())  # This redraws the piece to the square
         prevSquare.setPiecePixmap(None)
         self.highlightSquares([])  # Unhighlights squares
+
+        # TODO: REMOVE. THIS IS FOR DEBUGGING
+        self.printSquares()
 
     def getSquares(self) -> dict:
         return self.squares
@@ -147,6 +150,17 @@ class BoardScene(QGraphicsScene):
         for sq in squares:
             self.highlightedSquares.append((sq, sq.brush()))
             sq.setBrush(Qt.yellow)
+
+    def printSquares(self):
+        """Prints all the squares and the pieces on each square.
+        Used for debugging."""
+        i = 1
+        for name in self.squares:
+            end = '\t' if i % 8 != 0 else '\n'
+            piece = self.squares[name].getPiece()
+            print(name + ': ' + str(self.squares[name].getPiece()), end=end)
+            i += 1
+        print('-' * 20)
 
 
 class Square(QGraphicsRectItem):
@@ -184,6 +198,7 @@ class Square(QGraphicsRectItem):
         return self.piece
 
     def setPiecePixmap(self, pixmap: QGraphicsPixmapItem):
+        """Gives pixmap item of the piece to the square"""
         self.piecePixmap = pixmap
 
     def getPiecePixmap(self):

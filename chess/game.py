@@ -58,7 +58,7 @@ class ChessGame(QWidget):
             self.gameInfo.moveList.addMove(moveName, isWhite=self.whiteTurn)
 
             # Because we want to return the selectedSquare and set 
-            # self.selectedSquare to None, we give it the name prevSquare.            
+            # self.selectedSquare to None, we give it the name prevSquare.   
             prevSquare = self.selectedSquare
             newSquare.setPiece(prevSquare.getPiece())
             prevSquare.setPiece(None)

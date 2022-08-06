@@ -77,10 +77,7 @@ class BoardScene(QGraphicsScene):
 
     def createSquares(self):
         """Create Square objects for every square on the board and put
-        them in a dictionary.
-        
-        The game parameter is only used to set up mouse events for the 
-        squares"""
+        them in a dictionary."""
         squares = {}
         squareNames = iter(SQUARE_NAMES)
         whiteOnEven = True
@@ -205,12 +202,15 @@ class Square(QGraphicsRectItem):
         return self.piece
 
     def setPiecePixmap(self, pixmap: QGraphicsPixmapItem):
-        """Gives pixmap item of the piece to the square"""
+        """Gives a reference to the square of the pixmap item of the piece
+        on this square."""
         # If pixmap is not None, then a piece has entered this square
         # and a reference to its pixmap is being given. If there was
         # a piece on this square that was captured, its pixmap needs
-        # to be deleted off the board first.g
-        if pixmap is not None:
+        # to be deleted off the board first.
+        if ((pixmap is not None)
+                and self.hasPiece()
+                and (self.piecePixmap is not None)):
             self.scene().removeItem(self.piecePixmap)
         self.piecePixmap = pixmap
 

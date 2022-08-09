@@ -13,9 +13,17 @@ class PieceMovements:
         # BoardScene will create the squares and call setSquares() to 
         # give PieceMovements a reference to squares as well.
         self.squares = None
+        self.wKingControlledSquares = None
+        self.bKingControlledSquares = None
 
     def setSquares(self, squares):
         self.squares = squares
+
+    def setControlledSquares(self, wKingCtrlSquares, bKingCtrlSquares):
+        """Set the controlledSquares attributes. These are the squares
+        the kings are not allowed to go to as they would enter check"""
+        self.wKingControlledSquares = wKingCtrlSquares
+        self.bKingControlledSquares = bKingCtrlSquares
 
     def getSquares(self, names: str):
         # If type not string it must be a list of square names

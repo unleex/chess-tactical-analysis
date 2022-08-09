@@ -38,3 +38,8 @@ class BoardToGameInterface:
         """Called by Squares when they are clicked and want to know if
         they're the enemy piece"""
         return cls.CURRENT_GAME.whiteTurn
+
+    @classmethod
+    def squareClicked(cls, squareName, piece):
+        """Called when a Square is clicked"""
+        return cls.CURRENT_GAME.squareClicked(squareName, piece)

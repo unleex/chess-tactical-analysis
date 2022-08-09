@@ -36,6 +36,11 @@ class ChessGame(QWidget):
         self.layout.addWidget(self.gameInfo, stretch=1)
         self.setLayout(self.layout)
 
+    def squareClicked(self, squareName, piece):
+        """"""
+        print(squareName + ' with a ' + piece + ' has been clicked')
+        return {}
+
     def selectSquare(self, square: Square):
         """Saves square and its piece as the selected square and
         returns squares that the piece can go to."""
@@ -67,6 +72,14 @@ class ChessGame(QWidget):
             self.selectedSquare = None
             self.possibleSquares = []
 
+            # Now that piece has moved, get its possible squares to move to
+            # from its new square and add them to the appropriate
+            # controlledSquares list
+            if self.whiteTurn:
+                self.updateControlledSquares(newSquare)
+            else:
+                self.updateControlledSquares(newSquare)
+
             self.whiteTurn = True if self.whiteTurn is False else False
             return newSquare, prevSquare
 
@@ -88,6 +101,18 @@ class ChessGame(QWidget):
         if newSquare.hasPiece():
             return abbr + 'x' + newSquare.getName()
         return abbr + newSquare.getName()
+
+    def updateControlledSquares(self, square: Square):
+        """Compare the king's possible moves and this piece's possible moves
+        to update what squares the king cannot move to. """
+        pieceSquares = set(self.getPossibleSquares(square))
+        if self.whiteTurn:
+            self.bKingControlledSquares[square.getPiece()] = \
+                pieceSquares.intersection(self.bKingSquares)
+        else:
+            self.wKingControlledSquares[square.getPiece()] = \
+                pieceSquares.intersection(self.wKingSquares)
+
 
 class GameInfo(QFrame):
 

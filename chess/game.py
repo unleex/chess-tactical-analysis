@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from board import BoardView, Square
 from movement import PieceMovements
 from interface import BoardToGameInterface
+from pieces import *
 
 class ChessGame(QWidget):
     
@@ -16,8 +17,10 @@ class ChessGame(QWidget):
         self.board = BoardView()
         self.gameInfo = GameInfo()
         
-        # Get squares and give a reference to them to PieceMovements
-        self.squares = self.board.getSquares()
+        # Make a board state
+        self.squares = [[], [], [], [], [], [], [], []]
+        Board.setSquares(self.squares)  # So that pieces have access to squares
+        self.initializeBoardState()
         
         # Class that provides squares that a piece can move to
         self.movement = PieceMovements()
@@ -36,9 +39,58 @@ class ChessGame(QWidget):
         self.layout.addWidget(self.gameInfo, stretch=1)
         self.setLayout(self.layout)
 
+    def initializeBoardState(self):
+        """Initializes the board state by creating all the squares
+        and adding the appropriate Pieces to their initial squares."""
+        for i in range(8):
+            for j in range(8):
+                self.squares[i].append(Square((i, j)))
+
+        for i in range(8):
+            # Add pawns
+            self.squares[i][1].setPiece(Pawn(isWhite=True))
+            self.squares[i][6].setPiece(Pawn(isWhite=False))
+
+            # Add rooks
+            if i == 0 or i == 7:  # i=0 is the a file and i=7 is the h file
+                self.squares[i][0].setPiece(Rook(isWhite=True))
+                self.squares[i][7].setPiece(Rook(isWhite=False))
+
+            # Add knights
+            if i == 1 or i == 6:
+                self.squares[i][0].setPiece(Knight(isWhite=True))
+                self.squares[i][7].setPiece(Knight(isWhite=False))
+
+            # Add bishops
+            if i == 2 or i == 5:
+                self.squares[i][0].setPiece(Bishop(isWhite=True))
+                self.squares[i][7].setPiece(Bishop(isWhite=False))
+
+            # Add queens
+            if i == 3:
+                self.squares[i][0].setPiece(Queen(isWhite=True))
+                self.squares[i][7].setPiece(Queen(isWhite=False))
+
+            # Add kings
+            if i == 4:
+                self.squares[i][0].setPiece(King(isWhite=True))
+                self.squares[i][0].setPiece(King(isWhite=False))
+
+    def squareNameToCoord(self, squareName):
+        """Convert a square's name (eg. a1) to indexes for the square
+        on self.squares"""
+        letters = "abcdefgh"
+
+        letterCoord = letters.index(squareName[0])
+        numCoord = int(squareName[1]) - 1
+
+        return letterCoord, numCoord
+
     def squareClicked(self, squareName, piece):
         """"""
-        print(squareName + ' with a ' + piece + ' has been clicked')
+        coord = self.squareNameToCoord(squareName)
+        sq = self.squares[coord[0]][coord[1]]
+        print(squareName + 'with a ' + sq.getPiece().name + 'has been clicked')
         return {}
 
     def selectSquare(self, square: Square):
@@ -166,3 +218,32 @@ class MoveList(QFrame):
         else:
             self.moveListLayout.addWidget(label, self.row, 2)
             self.row += 1
+
+class Square:
+    """A detailed representation of a square that will hold
+    info about the square's state"""
+
+    def __init__(self, coord):
+        self.piece = None
+        self.controlledBy = []
+        self.pinned = False
+        self.coord = coord
+
+    def setPiece(self, piece):
+        self.piece = piece
+        self.piece.setSquare(self)
+        self.piece.updateSquares()
+
+    def addControllingPiece(self, piece):
+        self.controlledBy.append(piece)
+
+    def getCoord(self):
+        return self.coord
+
+    def hasPiece(self):
+        if self.piece is not None:
+            return True
+        return False
+
+    def getPiece(self):
+        return self.piece

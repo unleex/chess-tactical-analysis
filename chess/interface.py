@@ -40,6 +40,6 @@ class BoardToGameInterface:
         return cls.CURRENT_GAME.whiteTurn
 
     @classmethod
-    def squareClicked(cls, squareName, piece):
+    def squareClicked(cls, squareName):
         """Called when a Square is clicked"""
-        return cls.CURRENT_GAME.squareClicked(squareName, piece)
+        return cls.CURRENT_GAME.squareClicked(squareName)

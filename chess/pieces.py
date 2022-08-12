@@ -72,6 +72,11 @@ class Piece():
             return [str(sq) for sq in self.moves]
         return self.moves
 
+    def canMoveTo(self, square):
+        """Checks if square is in this Piece's move list"""
+        return square in self.moves
+
+
 class King(Piece):
     w_id = 0
     b_id = 0

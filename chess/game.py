@@ -30,6 +30,7 @@ class ChessGame(QWidget):
         self.turn = 0
         self.whiteTurn = True
         self.selectedPiece = None
+        self.selectedSquare = None  # square of the selected piece
         self.possibleSquares = None
 
         self.layout = QHBoxLayout()
@@ -98,7 +99,7 @@ class ChessGame(QWidget):
         sqName = letters[coord[0]] + str(coord[1] + 1)
         return sqName
 
-    def squareClicked(self, squareName, piece):
+    def squareClicked(self, squareName):
         """"""
         coord = self.squareNameToCoord(squareName)
         sq = self.squares[coord[0]][coord[1]]
@@ -107,10 +108,27 @@ class ChessGame(QWidget):
             # If there is a piece on the clicked square, select the piece
             # and visually highlight where it can go.
             self.selectedPiece = sq.getPiece()
+            self.selectedSquare = sq
             return {
                 "action": "highlightSquares",
                 "squares": self.selectedPiece.getMoves(nameOnly=True)
             }
+        else:
+            # If there is no piece, check if there is a piece selected
+            # that can move to the square.
+            if (self.selectedPiece is not None 
+                    and self.selectedPiece.canMoveTo(sq)):
+                sq.setPiece(self.selectedPiece)  # Moves the piece to sq
+
+                old_sq = self.selectedSquare  # Save the square the piece used to be on
+                self.selectedPiece = None
+                self.selectedSquare = None
+
+                return {
+                    "action": "movePiece",
+                    "squares": [str(old_sq), str(sq)]
+                }
+
 
         
         return {}

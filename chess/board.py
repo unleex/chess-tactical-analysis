@@ -18,7 +18,7 @@ from PySide6.QtWidgets import QGraphicsSceneMouseEvent
 from interface import BoardToGameInterface
 
 
-# Create a list with the names of each square starting from 
+# Create a list with the names of each square starting from
 # [a8, b8, ..., h8, a7, b7, ..., h7, etc..]
 SQUARE_NAMES = [(l+n) for n in "87654321" for l in "abcdefgh"]
 
@@ -39,7 +39,7 @@ class BoardView(QGraphicsView):
     def getSquares(self):
         return self.scene().squares
 
-        
+
 class BoardScene(QGraphicsScene):
 
     # Make a little smaller than the view for some margins
@@ -86,7 +86,7 @@ class BoardScene(QGraphicsScene):
         rowHeight = self.SQUARE_SIZE.height()
         rowCoord = [(x * rowHeight) for x in range(0, 8)]
         colCoord = [(y, y * rowHeight) for y in range(0, 8)]
-        
+
         for row in rowCoord:
             # At each row, white squares will be on the even numbered cols
             # or the odd numbered cols. c is the variable that knows the
@@ -118,11 +118,7 @@ class BoardScene(QGraphicsScene):
             for id_, pos in enumerate(self.INITIAL_POS[piece]):
                 imgItem = self.addPixmap(img)
                 sq = self.squares[pos]
-                # Use coordinates of square to position the piece
-                imgItem.setOffset(sq.getCoord())
-                # Let square know what piece it has
-                sq.setPiece(piece + str(id_))
-                sq.setPiecePixmap(imgItem)
+                sq.setPiece(piece + str(id_), imgItem)
 
     def drawPieceOnNewSquare(self, newSquare: Square, prevSquare: Square):
         """Moves a piece from prevSquare to newSquare"""
@@ -131,8 +127,8 @@ class BoardScene(QGraphicsScene):
         piecePixmap = prevSquare.getPiecePixmap()
 
         # Then set the piece attributes to None
-        prevSquare.setPiece(None) 
-        prevSquare.setPiecePixmap(None) 
+        prevSquare.setPiece(None)
+        prevSquare.setPiecePixmap(None)
 
         # Move piece to the newSquare
         piecePixmap.setOffset(newSquare.getCoord())
@@ -152,15 +148,27 @@ class BoardScene(QGraphicsScene):
     def highlightSquares(self, squares):
         """Change color of selected squares to highlight them"""
         # First unhighlight previously selected squares, if any
-        for sq, brush in self.highlightedSquares:
-            sq.setBrush(brush)
-        self.highlightedSquares.clear()
+        self.unhighlightSquares()
 
-        # Highlight selected squares    
+        # Highlight selected squares
         for sqName in squares:
             sq = self.squares[sqName]
             self.highlightedSquares.append((sq, sq.brush()))
             sq.setBrush(Qt.yellow)
+
+    def unhighlightSquares(self):
+        """Unhighlight currently highlighted squares"""
+        for sq, brush in self.highlightedSquares:
+            sq.setBrush(brush)
+        self.highlightedSquares.clear()
+
+
+    def movePiece(self, squares):
+        """Move piece from squares[0] to squares[1]"""
+        from_sq, to_sq = self.squares[squares[0]], self.squares[squares[1]]
+        from_sq.movePieceTo(to_sq)
+
+        self.unhighlightSquares()
 
     def printSquares(self):
         """Prints all the squares and the pieces on each square.
@@ -193,31 +201,45 @@ class Square(QGraphicsRectItem):
         """When a square is clicked and there is a piece on that square,
         this function will highlight the squares that the piece can move
         to."""
+        # Let the game know this square has been clicked
         result = BoardToGameInterface.squareClicked(
-            self.name, self.piece)
+            self.name)
 
+        # Check result to know what to do
         if result["action"] == "highlightSquares":
             self.scene().highlightSquares(result["squares"])
+        elif result["action"] == "movePiece":
+            self.scene().movePiece(result["squares"])
 
         return super().mousePressEvent(event)
 
-    def setPiece(self, piece: str):
+    def setPiece(self, piece: str, pixmap: str):
+        """Sets a piece to this square. Has the effect of visually moving
+        the piece to this square on the board."""
+        # Must come first, as it checks the current value of self.piece
+        self.setPiecePixmap(pixmap)
+
         self.piece = piece
 
     def getPiece(self):
         return self.piece
 
+    def movePieceTo(self, square_to):
+        """Moves the piece on this square to another square"""
+        piece, pixmap = self.piece, self.piecePixmap
+        self.piece = self.piecePixmap = None
+
+        square_to.setPiece(piece, pixmap)
+
     def setPiecePixmap(self, pixmap: QGraphicsPixmapItem):
         """Gives a reference to the square of the pixmap item of the piece
         on this square."""
-        # If pixmap is not None, then a piece has entered this square
-        # and a reference to its pixmap is being given. If there was
-        # a piece on this square that was captured, its pixmap needs
-        # to be deleted off the board first.
-        if ((pixmap is not None)
-                and self.hasPiece()
-                and (self.piecePixmap is not None)):
+        if self.hasPiece():
+            # If there was a piece on this square, it was captured
+            # and its pixmap can be deleted off the scene
             self.scene().removeItem(self.piecePixmap)
+        
+        pixmap.setOffset(self.getCoord())  # moves img of piece to sq
         self.piecePixmap = pixmap
 
     def getPiecePixmap(self):

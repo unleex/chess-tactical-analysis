@@ -168,8 +168,6 @@ class Rook(Piece):
         self.controlledSquares.clear()
         self.moves.clear()
 
-        print("Updating square of " + self.name)  # TODO: DEBUGGING
-
         coord = self.square.getCoord()
         squares = Board.getSquares()
 
@@ -186,8 +184,6 @@ class Rook(Piece):
 
                 sq = squares[sqCoords[0]][sqCoords[1]]
                 piece = sq.getPiece()
-
-                print("Checking square " + str(sq))  # TODO: DEBUGGING
                 
                 # Update Piece and Square's control vars
                 self.controlledSquares.append(sq)
@@ -195,7 +191,6 @@ class Rook(Piece):
 
                 # Everything that needs to happen if there is a piece
                 if sq.hasPiece():
-                    print("The square has a piece! It is " + piece.name)
 
                     # Check if piece is a king. If piece is a king of 
                     # opposite color, determine if there is an enemy 
@@ -212,21 +207,15 @@ class Rook(Piece):
                 
                     # If piece is of opposite color, add to moves list.
                     if canAddToMoves:
-                        print("Can still add moves.", end="\t")  # TODO: DEBUGGING
                         if self.isOppositeColorAs(piece):
-                            print("Enemy piece. Adding to moves list and stopping more moves")
                             self.moves.append(sq)
                             canAddToMoves = False
                         else:
-                            print("Friendly piece. Stopping more moves")
                             canAddToMoves = False
                 else:
                     # Everything that needs to happen if there is no piece
-                    print("The square has no piece!", end="\t")  # TODO: DEBUGGING
                     if canAddToMoves:
-                        print("Adding it to my moves list.")
                         self.moves.append(sq)
-                    print("Can't add it to my moves list")
                     
     def pinPiece(self, piece, direction):
         """Pins piece and gives the piece its allowed squares"""

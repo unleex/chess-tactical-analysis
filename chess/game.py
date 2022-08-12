@@ -19,6 +19,7 @@ class ChessGame(QWidget):
         
         # Make a board state
         self.squares = [[], [], [], [], [], [], [], []]
+        self.pieces = []
         Board.setSquares(self.squares)  # So that pieces have access to squares
         self.initializeBoardState()
         
@@ -53,33 +54,42 @@ class ChessGame(QWidget):
             # the passed in 'square' using square.setPiece(self).
 
             # Add pawns
-            Pawn(isWhite=True, square=self.squares[i][1])
-            Pawn(isWhite=False, square=self.squares[i][6])
+            p1 = Pawn(isWhite=True, square=self.squares[i][1])
+            p2 = Pawn(isWhite=False, square=self.squares[i][6])
+            self.pieces.extend((p1, p2))
 
             # Add rooks
             if i == 0 or i == 7:  # i=0 is the a file and i=7 is the h file
-                Rook(isWhite=True, square=self.squares[i][0])
-                Rook(isWhite=False, square=self.squares[i][7])
+                p1 = Rook(isWhite=True, square=self.squares[i][0])
+                p2 = Rook(isWhite=False, square=self.squares[i][7])
+                self.pieces.extend((p1, p2))
 
             # Add knights
             if i == 1 or i == 6:
-                Knight(isWhite=True, square=self.squares[i][0])
-                Knight(isWhite=False, square=self.squares[i][7])
+                p1 = Knight(isWhite=True, square=self.squares[i][0])
+                p2 = Knight(isWhite=False, square=self.squares[i][7])
+                self.pieces.extend((p1, p2))
 
             # Add bishops
             if i == 2 or i == 5:
-                Bishop(isWhite=True, square=self.squares[i][0])
-                Bishop(isWhite=True, square=self.squares[i][7])
+                p1 = Bishop(isWhite=True, square=self.squares[i][0])
+                p2 = Bishop(isWhite=True, square=self.squares[i][7])
+                self.pieces.extend((p1, p2))
 
             # Add queens
             if i == 3:
-                Queen(isWhite=True, square=self.squares[i][0])
-                Queen(isWhite=True, square=self.squares[i][7])
+                p1 = Queen(isWhite=True, square=self.squares[i][0])
+                p2 = Queen(isWhite=True, square=self.squares[i][7])
+                self.pieces.extend((p1, p2))
 
             # Add kings
             if i == 4:
-                King(isWhite=True, square=self.squares[i][0])
-                King(isWhite=True, square=self.squares[i][7])
+                p1 = King(isWhite=True, square=self.squares[i][0])
+                p2 = King(isWhite=True, square=self.squares[i][7])
+                self.pieces.extend((p1, p2))
+
+        for piece in self.pieces:
+            piece.updateSquares()
 
     def squareNameToCoord(self, squareName):
         """Convert a square's name (eg. a1) to indexes for the square
@@ -119,7 +129,7 @@ class ChessGame(QWidget):
             # that can move to the square.
             if (self.selectedPiece is not None 
                     and self.selectedPiece.canMoveTo(sq)):
-                sq.setPiece(self.selectedPiece)  # Moves the piece to sq
+                self.selectedPiece.setSquare(sq) # Moves the piece to sq
 
                 old_sq = self.selectedSquare  # Save the square the piece used to be on
                 self.selectedPiece = None
@@ -271,13 +281,19 @@ class Square:
         self.pinned = False
         self.coord = coord
 
-    def setPiece(self, piece):
+    def setPiece(self, piece, init=False):
         self.piece = piece
-        self.piece.setSquare(self)
-        self.piece.updateSquares()
+
+        # Don't update squares when initializing the pieces on their
+        # initial positions
+        if (not init) and (piece is not None):
+            self.piece.updateSquares()
 
     def addControllingPiece(self, piece):
         self.controlledBy.append(piece)
+
+    def getControllingPieces(self):
+        return self.controlledBy
 
     def getCoord(self):
         return self.coord

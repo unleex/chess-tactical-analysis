@@ -1,4 +1,6 @@
 """This module defines classes for every type of chess piece"""
+
+
 class Board:
     """Provides an easy way for a Piece to access the board state of a game
     by getting the squares. Centralizes access so that 16 Piece objects do
@@ -35,13 +37,27 @@ class Piece():
 
         # Adds itself to a square, which starts things off
         self.square = square
-        self.square.setPiece(self)
+        self.square.setPiece(self, init=True)
     
     def getPossibleSquares(self):
         ...
 
     def setSquare(self, square):
-        self.square = square
+        """Sets a square to this piece. Called when this piece moves to
+        another square"""
+        old_square = self.square  # save old square
+        old_square.setPiece(None)  # remove itself from old square
+
+        self.square = square  # update square
+        self.square.setPiece(self)
+        
+        # Get all pieces that could be affected by the move
+        old_square_controllers = set(old_square.getControllingPieces())
+        new_square_controllers = set(self.square.getControllingPieces())
+
+        piecesToUpdate = old_square_controllers.union(new_square_controllers)
+        for piece in piecesToUpdate:
+            piece.updateSquares()
 
     def updateSquares(self):
         ...
@@ -149,6 +165,11 @@ class Rook(Piece):
 
     def updateSquares(self):
         """Updates the states of squares this rook can move to"""
+        self.controlledSquares.clear()
+        self.moves.clear()
+
+        print("Updating square of " + self.name)  # TODO: DEBUGGING
+
         coord = self.square.getCoord()
         squares = Board.getSquares()
 
@@ -165,6 +186,8 @@ class Rook(Piece):
 
                 sq = squares[sqCoords[0]][sqCoords[1]]
                 piece = sq.getPiece()
+
+                print("Checking square " + str(sq))  # TODO: DEBUGGING
                 
                 # Update Piece and Square's control vars
                 self.controlledSquares.append(sq)
@@ -172,6 +195,7 @@ class Rook(Piece):
 
                 # Everything that needs to happen if there is a piece
                 if sq.hasPiece():
+                    print("The square has a piece! It is " + piece.name)
 
                     # Check if piece is a king. If piece is a king of 
                     # opposite color, determine if there is an enemy 
@@ -188,11 +212,21 @@ class Rook(Piece):
                 
                     # If piece is of opposite color, add to moves list.
                     if canAddToMoves:
+                        print("Can still add moves.", end="\t")  # TODO: DEBUGGING
                         if self.isOppositeColorAs(piece):
+                            print("Enemy piece. Adding to moves list and stopping more moves")
                             self.moves.append(sq)
                             canAddToMoves = False
                         else:
+                            print("Friendly piece. Stopping more moves")
                             canAddToMoves = False
+                else:
+                    # Everything that needs to happen if there is no piece
+                    print("The square has no piece!", end="\t")  # TODO: DEBUGGING
+                    if canAddToMoves:
+                        print("Adding it to my moves list.")
+                        self.moves.append(sq)
+                    print("Can't add it to my moves list")
                     
     def pinPiece(self, piece, direction):
         """Pins piece and gives the piece its allowed squares"""

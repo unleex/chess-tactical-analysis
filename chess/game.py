@@ -5,6 +5,7 @@ from board import BoardView, Square
 from movement import PieceMovements
 from interface import BoardToGameInterface
 from pieces import *
+import logger
 
 class ChessGame(QWidget):
     
@@ -90,6 +91,7 @@ class ChessGame(QWidget):
 
         for piece in self.pieces:
             piece.updateSquares(init=True)
+        logger.showBoard(self.squares)
 
     def squareNameToCoord(self, squareName):
         """Convert a square's name (eg. a1) to indexes for the square
@@ -134,6 +136,8 @@ class ChessGame(QWidget):
                 old_sq = self.selectedSquare  # Save the square the piece used to be on
                 self.selectedPiece = None
                 self.selectedSquare = None
+
+                logger.showBoard(self.squares)
 
                 return {
                     "action": "movePiece",
@@ -291,6 +295,10 @@ class Square:
 
     def addControllingPiece(self, piece):
         self.controlledBy.append(piece)
+
+    def removeControllingPiece(self, piece):
+        indexToRemove = self.controlledBy.index(piece)
+        del self.controlledBy[indexToRemove]
 
     def getControllingPieces(self):
         return self.controlledBy

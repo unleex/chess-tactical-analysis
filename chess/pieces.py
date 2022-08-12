@@ -72,6 +72,16 @@ class Piece():
         if not init:
             logger.pieceUpdatedSquares(self)
 
+    def clearControlledSquares(self):
+        """Goes through their controlledSquares list and removes the piece
+        from their controllingPiece lists. Also clears the piece's
+        controlledSquares list as it will be refreshed. This will be called
+        whenever a piece is updating their squares due to a move."""
+        for sq in self.controlledSquares:
+            sq.removeControllingPiece(self)
+        
+        self.controlledSquares.clear()
+
     def addPinningPiece(self, piece, allowedSquares):
         self.pinnedBy[piece] = allowedSquares
 
@@ -129,7 +139,7 @@ class Pawn(Piece):
     def updateSquares(self, init=False):
         """Gets the squares this pawn can move to and updates the state
         of any squares that this pawn affects."""
-        self.controlledSquares.clear()
+        self.clearControlledSquares()
         coord = self.square.getCoord()
         squares = Board.getSquares()
 
@@ -184,7 +194,7 @@ class Rook(Piece):
 
     def updateSquares(self, init=False):
         """Updates the states of squares this rook can move to"""
-        self.controlledSquares.clear()
+        self.clearControlledSquares()
         self.moves.clear()
 
         coord = self.square.getCoord()

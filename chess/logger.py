@@ -2,6 +2,7 @@
 
 print("Opening log file...")
 LOG_FILE = open("logs.txt", "w", )
+BOARD_LOG_FILE = open("board_logs.txt", "w")
 
 def pieceUpdatedSquares(piece):
     """Shows that piece was updated and its current state"""
@@ -20,6 +21,21 @@ def pieceMoved(piece, piecesToUpdate=None):
     LOG_FILE.write(toLog)
     LOG_FILE.flush()
 
+def showBoard(squares):
+    """Shows every square and the pieces that control them"""
+    # Clear file first so it only shows latest board
+    BOARD_LOG_FILE.truncate(0)
+    BOARD_LOG_FILE.seek(0)
+
+    toLog = ""
+    for l in range(8):
+        for n in range(8):
+            sq = squares[l][n]
+            toLog += f"{str(sq)}: {sq.getControllingPieces()}\n"
+    BOARD_LOG_FILE.write(toLog)
+    BOARD_LOG_FILE.flush()
+
 def closeLog():
     print("Closing log file...")
     LOG_FILE.close()
+    BOARD_LOG_FILE.close()

@@ -4,6 +4,7 @@ from game import ChessGame
 from PySide6.QtWidgets import (QApplication, QWidget, QPushButton, QVBoxLayout,
                                QSizePolicy)
 from PySide6.QtCore import Qt
+import logger
 
 
 class MainWindow(QWidget):
@@ -41,6 +42,7 @@ class MainWindow(QWidget):
 
 if __name__ == "__main__":
     app = QApplication([])
+    app.aboutToQuit.connect(logger.closeLog)
 
     main = MainWindow()
     main.show()

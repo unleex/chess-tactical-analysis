@@ -1,5 +1,5 @@
 """This module defines classes for every type of chess piece"""
-
+import logger
 
 class Board:
     """Provides an easy way for a Piece to access the board state of a game
@@ -40,6 +40,7 @@ class Piece():
         self.square.setPiece(self, init=True)
     
     def getPossibleSquares(self):
+        """"""
         ...
 
     def setSquare(self, square):
@@ -56,11 +57,16 @@ class Piece():
         new_square_controllers = set(self.square.getControllingPieces())
 
         piecesToUpdate = old_square_controllers.union(new_square_controllers)
+
+        logger.pieceMoved(self, piecesToUpdate)  # Marks the start
         for piece in piecesToUpdate:
             piece.updateSquares()
+        logger.pieceMoved(self)  # Marks the end of the updates
 
     def updateSquares(self):
-        ...
+        """This function should be reimplemented to update the squares of
+        this piece. This only serves to log the changes."""
+        logger.pieceUpdatedSquares(self)
 
     def addPinningPiece(self, piece, allowedSquares):
         self.pinnedBy[piece] = allowedSquares
@@ -81,6 +87,9 @@ class Piece():
                    f"Pinned By: {self.pinnedBy}\n"
                    f"Moves: {self.moves}\n" + "-"*20)
         return toPrint
+
+    def __repr__(self):
+        return self.name
 
     def getMoves(self, nameOnly=False):
         if nameOnly:
@@ -131,6 +140,8 @@ class Pawn(Piece):
             self.controlledSquares.append(sq)
             sq.addControllingPiece(self)
 
+        super().updateSquares()
+
     def updateMoves(self):
         """Updates the possible squares this pawn can move to"""
         self.moves.clear()
@@ -141,18 +152,18 @@ class Pawn(Piece):
             sq = squares[coord[0]][coord[1]+1]
             if not sq.hasPiece():
                 self.moves.append(sq)
-            if coord[1] == 1:  # If pawn is still on 2nd rank
-                sq = squares[coord[0]][coord[1]+2]
-                if not sq.hasPiece():
-                    self.moves.append(sq)
+                if coord[1] == 1:  # If pawn is still on 2nd rank
+                    sq = squares[coord[0]][coord[1]+2]
+                    if not sq.hasPiece():
+                        self.moves.append(sq)
         else:
             sq = squares[coord[0]][coord[1]-1]
             if not sq.hasPiece():
                 self.moves.append(sq)
-            if coord[1] == 6:  # If pawn is still on 7th rank
-                sq = squares[coord[0]][coord[1]-2]
-                if not sq.hasPiece():
-                    self.moves.append(sq)
+                if coord[1] == 6:  # If pawn is still on 7th rank
+                    sq = squares[coord[0]][coord[1]-2]
+                    if not sq.hasPiece():
+                        self.moves.append(sq)
     
 
 class Rook(Piece):
@@ -216,6 +227,8 @@ class Rook(Piece):
                     # Everything that needs to happen if there is no piece
                     if canAddToMoves:
                         self.moves.append(sq)
+
+        super().updateSquares()
                     
     def pinPiece(self, piece, direction):
         """Pins piece and gives the piece its allowed squares"""

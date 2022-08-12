@@ -1,8 +1,8 @@
 """Module that will log certain activities in another file"""
 
 print("Opening log file...")
-LOG_FILE = open("logs.txt", "w", )
-BOARD_LOG_FILE = open("board_logs.txt", "w")
+LOG_FILE = open("logs/logs.txt", "w", )
+BOARD_LOG_FILE = open("logs/board_logs.txt", "w")
 
 def pieceUpdatedSquares(piece):
     """Shows that piece was updated and its current state"""

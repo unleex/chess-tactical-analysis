@@ -103,6 +103,7 @@ class ChessGame(QWidget):
         """"""
         coord = self.squareNameToCoord(squareName)
         sq = self.squares[coord[0]][coord[1]]
+        print(sq.getPiece())
 
         if sq.hasPiece():
             # If there is a piece on the clicked square, select the piece

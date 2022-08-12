@@ -100,6 +100,7 @@ class Pawn(Piece):
     def updateSquares(self):
         """Gets the squares this pawn can move to and updates the state
         of any squares that this pawn affects."""
+        self.controlledSquares.clear()
         coord = self.square.getCoord()
         squares = Board.getSquares()
 
@@ -116,6 +117,7 @@ class Pawn(Piece):
 
     def updateMoves(self):
         """Updates the possible squares this pawn can move to"""
+        self.moves.clear()
         coord = self.square.getCoord()
         squares = Board.getSquares()
 

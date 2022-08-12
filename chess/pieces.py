@@ -66,6 +66,12 @@ class Piece():
                    f"Moves: {self.moves}\n" + "-"*20)
         return toPrint
 
+    def getMoves(self, nameOnly=False):
+        if nameOnly:
+            # Square.__str__ simply returns the name of a square
+            return [str(sq) for sq in self.moves]
+        return self.moves
+
 class King(Piece):
     w_id = 0
     b_id = 0

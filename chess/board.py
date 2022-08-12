@@ -157,7 +157,8 @@ class BoardScene(QGraphicsScene):
         self.highlightedSquares.clear()
 
         # Highlight selected squares    
-        for sq in squares:
+        for sqName in squares:
+            sq = self.squares[sqName]
             self.highlightedSquares.append((sq, sq.brush()))
             sq.setBrush(Qt.yellow)
 
@@ -194,6 +195,9 @@ class Square(QGraphicsRectItem):
         to."""
         result = BoardToGameInterface.squareClicked(
             self.name, self.piece)
+
+        if result["action"] == "highlightSquares":
+            self.scene().highlightSquares(result["squares"])
 
         return super().mousePressEvent(event)
 

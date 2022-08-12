@@ -29,7 +29,7 @@ class ChessGame(QWidget):
         # Game variables
         self.turn = 0
         self.whiteTurn = True
-        self.selectedSquare = None
+        self.selectedPiece = None
         self.possibleSquares = None
 
         self.layout = QHBoxLayout()
@@ -102,8 +102,17 @@ class ChessGame(QWidget):
         """"""
         coord = self.squareNameToCoord(squareName)
         sq = self.squares[coord[0]][coord[1]]
+
         if sq.hasPiece():
-            print(sq.getPiece())
+            # If there is a piece on the clicked square, select the piece
+            # and visually highlight where it can go.
+            self.selectedPiece = sq.getPiece()
+            return {
+                "action": "highlightSquares",
+                "squares": self.selectedPiece.getMoves(nameOnly=True)
+            }
+
+        
         return {}
 
     def selectSquare(self, square: Square):
@@ -169,7 +178,7 @@ class ChessGame(QWidget):
 
     def updateControlledSquares(self, square: Square):
         """Compare the king's possible moves and this piece's possible moves
-        to update what squares the king cannot move to. """
+        to update what squares the king cannot move to."""
         pieceSquares = set(self.getPossibleSquares(square))
         if self.whiteTurn:
             self.bKingControlledSquares[square.getPiece()] = \

@@ -28,7 +28,6 @@ class Piece():
             self.name = "b" + pieceType.pieceName + str(pieceType.b_id)
             pieceType.b_id += 1
 
-
         self.isWhite = isWhite
         self.controlledSquares = []
         self.moves = []
@@ -42,6 +41,10 @@ class Piece():
     def getPossibleSquares(self):
         """"""
         ...
+
+    def addControlledSquare(self, square):
+        self.controlledSquares.append(square)
+        square.addControllingPiece(self)
 
     def setSquare(self, square):
         """Sets a square to this piece. Called when this piece moves to
@@ -63,10 +66,11 @@ class Piece():
             piece.updateSquares()
         logger.pieceMoved(self)  # Marks the end of the updates
 
-    def updateSquares(self):
+    def updateSquares(self, init=False):
         """This function should be reimplemented to update the squares of
         this piece. This only serves to log the changes."""
-        logger.pieceUpdatedSquares(self)
+        if not init:
+            logger.pieceUpdatedSquares(self)
 
     def addPinningPiece(self, piece, allowedSquares):
         self.pinnedBy[piece] = allowedSquares
@@ -122,7 +126,7 @@ class Pawn(Piece):
     def __init__(self, isWhite, square):
         super().__init__(isWhite, square)
 
-    def updateSquares(self):
+    def updateSquares(self, init=False):
         """Gets the squares this pawn can move to and updates the state
         of any squares that this pawn affects."""
         self.controlledSquares.clear()
@@ -133,14 +137,12 @@ class Pawn(Piece):
 
         if coord[0] != 0:
             sq = squares[coord[0]-1][coord[1]+1]
-            self.controlledSquares.append(sq)
-            sq.addControllingPiece(self)
+            self.addControlledSquare(sq)
         if coord[0] != 7:
             sq = squares[coord[0]+1][coord[1]+1]
-            self.controlledSquares.append(sq)
-            sq.addControllingPiece(self)
+            self.addControlledSquare(sq)
 
-        super().updateSquares()
+        super().updateSquares(init=init)
 
     def updateMoves(self):
         """Updates the possible squares this pawn can move to"""
@@ -150,18 +152,24 @@ class Pawn(Piece):
 
         if self.isWhite:
             sq = squares[coord[0]][coord[1]+1]
+            self.addControlledSquare(sq)
+
             if not sq.hasPiece():
                 self.moves.append(sq)
                 if coord[1] == 1:  # If pawn is still on 2nd rank
                     sq = squares[coord[0]][coord[1]+2]
+                    self.addControlledSquare(sq)
+
                     if not sq.hasPiece():
                         self.moves.append(sq)
         else:
             sq = squares[coord[0]][coord[1]-1]
+            self.addControlledSquare(sq)
             if not sq.hasPiece():
                 self.moves.append(sq)
                 if coord[1] == 6:  # If pawn is still on 7th rank
                     sq = squares[coord[0]][coord[1]-2]
+                    self.addControlledSquare(sq)
                     if not sq.hasPiece():
                         self.moves.append(sq)
     
@@ -174,7 +182,7 @@ class Rook(Piece):
     def __init__(self, isWhite, square):
         super().__init__(isWhite, square)
 
-    def updateSquares(self):
+    def updateSquares(self, init=False):
         """Updates the states of squares this rook can move to"""
         self.controlledSquares.clear()
         self.moves.clear()
@@ -197,8 +205,7 @@ class Rook(Piece):
                 piece = sq.getPiece()
                 
                 # Update Piece and Square's control vars
-                self.controlledSquares.append(sq)
-                sq.addControllingPiece(self)
+                self.addControlledSquare(sq)
 
                 # Everything that needs to happen if there is a piece
                 if sq.hasPiece():
@@ -228,7 +235,7 @@ class Rook(Piece):
                     if canAddToMoves:
                         self.moves.append(sq)
 
-        super().updateSquares()
+        super().updateSquares(init=init)
                     
     def pinPiece(self, piece, direction):
         """Pins piece and gives the piece its allowed squares"""

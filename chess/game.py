@@ -89,7 +89,7 @@ class ChessGame(QWidget):
                 self.pieces.extend((p1, p2))
 
         for piece in self.pieces:
-            piece.updateSquares()
+            piece.updateSquares(init=True)
 
     def squareNameToCoord(self, squareName):
         """Convert a square's name (eg. a1) to indexes for the square

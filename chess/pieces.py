@@ -323,7 +323,31 @@ class Knight(Piece):
     w_id = 0
     b_id = 0
     pieceName = "Knight"  
-    pass  
+    
+    def __init__(self, isWhite, square):
+        super().__init__(isWhite, square)
+
+    def updateSquares(self, init=False):
+        self.clearTrackedAndControlledSquares()
+        coord = self.square.getCoord()
+        squares = Board.getSquares()
+
+        direction = (
+            (1, 2), (2, 1), (2, -1), (1, -2),
+            (-1, -2), (-2, -1), (-2, 1), (-1, 2))
+        
+        for d in direction:
+            new_coord = coord[0] + d[0], coord[1] + d[1]
+            if ((new_coord[0] > 7 or new_coord[1] > 7)
+                    or (new_coord[0] < 0 or new_coord[1] < 0)):
+                continue
+
+            sq = squares[new_coord[0]][new_coord[1]]
+            self.addTrackedSquare(sq)
+            if not sq.hasPiece() or self.isOppositeColorAs(sq.getPiece()):
+                self.addMove(sq)
+
+        super().updateSquares(init=init)
     
 
 class Bishop(Piece):

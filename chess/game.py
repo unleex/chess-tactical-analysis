@@ -1,8 +1,7 @@
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QFrame, QLabel,
                                QGridLayout, QVBoxLayout)
 from PySide6.QtCore import Qt
-from board import BoardView, Square
-from movement import PieceMovements
+from board import BoardView, Square 
 from interface import BoardToGameInterface
 from pieces import *
 import logger
@@ -23,17 +22,12 @@ class ChessGame(QWidget):
         self.pieces = []
         Board.setSquares(self.squares)  # So that pieces have access to squares
         self.initializeBoardState()
-        
-        # Class that provides squares that a piece can move to
-        self.movement = PieceMovements()
-        self.movement.setSquares(self.squares)
 
         # Game variables
         self.turn = 0
         self.whiteTurn = True
         self.selectedPiece = None
         self.selectedSquare = None  # square of the selected piece
-        self.possibleSquares = None
 
         self.layout = QHBoxLayout()
         self.layout.setContentsMargins(0,0,0,0)
@@ -148,48 +142,6 @@ class ChessGame(QWidget):
         
         return {}
 
-    def selectSquare(self, square: Square):
-        """Saves square and its piece as the selected square and
-        returns squares that the piece can go to."""
-        self.selectedSquare = square
-        self.possibleSquares = self.getPossibleSquares(square)
-        return self.possibleSquares
-
-    def getPossibleSquares(self, square: Square):
-        if (self.whiteTurn and square.hasWhitePiece() 
-                or (not self.whiteTurn) and square.hasBlackPiece()):
-            return self.movement.getPossibleSquares(square)
-        return []
-
-    def moveToSquare(self, newSquare: Square):
-        """Move piece in selected square to passed in square. Changes
-        attributes of the squares to reflect the move, and returns the
-        squares to allow the BoardView to redraw the piece. Also adds
-        the move to the move list"""
-        if newSquare in self.possibleSquares:
-            # Add move to to the move list.
-            moveName = self.createMoveName(self.selectedSquare, newSquare)
-            self.gameInfo.moveList.addMove(moveName, isWhite=self.whiteTurn)
-
-            # Because we want to return the selectedSquare and set 
-            # self.selectedSquare to None, we give it the name prevSquare.   
-            prevSquare = self.selectedSquare
-            newSquare.setPiece(prevSquare.getPiece())
-            prevSquare.setPiece(None)
-            self.selectedSquare = None
-            self.possibleSquares = []
-
-            # Now that piece has moved, get its possible squares to move to
-            # from its new square and add them to the appropriate
-            # controlledSquares list
-            if self.whiteTurn:
-                self.updateControlledSquares(newSquare)
-            else:
-                self.updateControlledSquares(newSquare)
-
-            self.whiteTurn = True if self.whiteTurn is False else False
-            return newSquare, prevSquare
-
     def createMoveName(self, oldSquare: Square, newSquare: Square):
         """Creates a move name (eg. Nf3) from looking at a pieces'
         current square (oldSquare) and the square it's going to move
@@ -208,17 +160,6 @@ class ChessGame(QWidget):
         if newSquare.hasPiece():
             return abbr + 'x' + newSquare.getName()
         return abbr + newSquare.getName()
-
-    def updateControlledSquares(self, square: Square):
-        """Compare the king's possible moves and this piece's possible moves
-        to update what squares the king cannot move to."""
-        pieceSquares = set(self.getPossibleSquares(square))
-        if self.whiteTurn:
-            self.bKingControlledSquares[square.getPiece()] = \
-                pieceSquares.intersection(self.bKingSquares)
-        else:
-            self.wKingControlledSquares[square.getPiece()] = \
-                pieceSquares.intersection(self.wKingSquares)
 
 
 class GameInfo(QFrame):

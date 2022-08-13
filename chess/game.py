@@ -1,9 +1,10 @@
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QFrame, QLabel,
                                QGridLayout, QVBoxLayout)
 from PySide6.QtCore import Qt
-from board import BoardView, Square
-from movement import PieceMovements
+from board import BoardView, Square 
 from interface import BoardToGameInterface
+from pieces import *
+import logger
 
 class ChessGame(QWidget):
     
@@ -16,16 +17,17 @@ class ChessGame(QWidget):
         self.board = BoardView()
         self.gameInfo = GameInfo()
         
-        # Get squares and give a reference to them to PieceMovements
-        self.squares = self.board.getSquares()
-        self.movement = PieceMovements()
-        self.movement.setSquares(self.squares)
+        # Make a board state
+        self.squares = [[], [], [], [], [], [], [], []]
+        self.pieces = []
+        Board.setSquares(self.squares)  # So that pieces have access to squares
+        self.initializeBoardState()
 
         # Game variables
         self.turn = 0
         self.whiteTurn = True
-        self.selectedSquare = None
-        self.possibleSquares = None
+        self.selectedPiece = None
+        self.selectedSquare = None  # square of the selected piece
 
         self.layout = QHBoxLayout()
         self.layout.setContentsMargins(0,0,0,0)
@@ -34,39 +36,111 @@ class ChessGame(QWidget):
         self.layout.addWidget(self.gameInfo, stretch=1)
         self.setLayout(self.layout)
 
-    def selectSquare(self, square: Square):
-        """Saves square and its piece as the selected square and
-        returns squares that the piece can go to."""
-        self.selectedSquare = square
-        self.possibleSquares = self.getPossibleSquares(square)
-        return self.possibleSquares
+    def initializeBoardState(self):
+        """Initializes the board state by creating all the squares
+        and adding the appropriate Pieces to their initial squares."""
+        for i in range(8):
+            for j in range(8):
+                sqName = self.coordToSquareName((i, j))
+                self.squares[i].append(Square((i, j), sqName))
 
-    def getPossibleSquares(self, square: Square):
-        if (self.whiteTurn and square.hasWhitePiece() 
-                or (not self.whiteTurn) and square.hasBlackPiece()):
-            return self.movement.getPossibleSquares(square)
-        return []
+        for i in range(8):
+            # Piece instances save themselves as an attribute to
+            # the passed in 'square' using square.setPiece(self).
 
-    def moveToSquare(self, newSquare: Square):
-        """Move piece in selected square to passed in square. Changes
-        attributes of the squares to reflect the move, and returns the
-        squares to allow the BoardView to redraw the piece. Also adds
-        the move to the move list"""
-        if newSquare in self.possibleSquares:
-            # Add move to to the move list.
-            moveName = self.createMoveName(self.selectedSquare, newSquare)
-            self.gameInfo.moveList.addMove(moveName, isWhite=self.whiteTurn)
+            # Add pawns
+            p1 = Pawn(isWhite=True, square=self.squares[i][1])
+            p2 = Pawn(isWhite=False, square=self.squares[i][6])
+            self.pieces.extend((p1, p2))
 
-            # Because we want to return the selectedSquare and set 
-            # self.selectedSquare to None, we give it the name prevSquare.   
-            prevSquare = self.selectedSquare
-            newSquare.setPiece(prevSquare.getPiece())
-            prevSquare.setPiece(None)
-            self.selectedSquare = None
-            self.possibleSquares = []
+            # Add rooks
+            if i == 0 or i == 7:  # i=0 is the a file and i=7 is the h file
+                p1 = Rook(isWhite=True, square=self.squares[i][0])
+                p2 = Rook(isWhite=False, square=self.squares[i][7])
+                self.pieces.extend((p1, p2))
 
-            self.whiteTurn = True if self.whiteTurn is False else False
-            return newSquare, prevSquare
+            # Add knights
+            if i == 1 or i == 6:
+                p1 = Knight(isWhite=True, square=self.squares[i][0])
+                p2 = Knight(isWhite=False, square=self.squares[i][7])
+                self.pieces.extend((p1, p2))
+
+            # Add bishops
+            if i == 2 or i == 5:
+                p1 = Bishop(isWhite=True, square=self.squares[i][0])
+                p2 = Bishop(isWhite=True, square=self.squares[i][7])
+                self.pieces.extend((p1, p2))
+
+            # Add queens
+            if i == 3:
+                p1 = Queen(isWhite=True, square=self.squares[i][0])
+                p2 = Queen(isWhite=True, square=self.squares[i][7])
+                self.pieces.extend((p1, p2))
+
+            # Add kings
+            if i == 4:
+                p1 = King(isWhite=True, square=self.squares[i][0])
+                p2 = King(isWhite=True, square=self.squares[i][7])
+                self.pieces.extend((p1, p2))
+
+        for piece in self.pieces:
+            piece.updateSquares(init=True)
+        logger.showBoard(self.squares)
+
+    def squareNameToCoord(self, squareName):
+        """Convert a square's name (eg. a1) to indexes for the square
+        on self.squares"""
+        letters = "abcdefgh"
+
+        letterCoord = letters.index(squareName[0])
+        numCoord = int(squareName[1]) - 1
+
+        return letterCoord, numCoord
+
+    def coordToSquareName(self, coord):
+        """Convert a square's index in self.squares (nicknamed coords),
+        to the traditional square names in chess (eg. a1, b2)"""
+        letters = "abcdefgh"
+
+        sqName = letters[coord[0]] + str(coord[1] + 1)
+        return sqName
+
+    def squareClicked(self, squareName):
+        """"""
+        coord = self.squareNameToCoord(squareName)
+        sq = self.squares[coord[0]][coord[1]]
+        print(sq.getPiece())
+
+        if sq.hasPiece():
+            # If there is a piece on the clicked square, select the piece
+            # and visually highlight where it can go.
+            self.selectedPiece = sq.getPiece()
+            self.selectedSquare = sq
+            return {
+                "action": "highlightSquares",
+                "squares": self.selectedPiece.getMoves(nameOnly=True)
+            }
+        else:
+            # If there is no piece, check if there is a piece selected
+            # that can move to the square.
+            if (self.selectedPiece is not None 
+                    and self.selectedPiece.canMoveTo(sq)):
+                self.selectedPiece.setSquare(sq) # Moves the piece to sq
+
+                old_sq = self.selectedSquare  # Save the square the piece used to be on
+                self.selectedPiece = None
+                self.selectedSquare = None
+
+                logger.showBoard(self.squares)
+
+                return {
+                    "action": "movePiece",
+                    "squares": [str(old_sq), str(sq)]
+                }
+
+
+        
+        return {}
 
     def createMoveName(self, oldSquare: Square, newSquare: Square):
         """Creates a move name (eg. Nf3) from looking at a pieces'
@@ -86,6 +160,7 @@ class ChessGame(QWidget):
         if newSquare.hasPiece():
             return abbr + 'x' + newSquare.getName()
         return abbr + newSquare.getName()
+
 
 class GameInfo(QFrame):
 
@@ -139,3 +214,49 @@ class MoveList(QFrame):
         else:
             self.moveListLayout.addWidget(label, self.row, 2)
             self.row += 1
+
+class Square:
+    """A detailed representation of a square that will hold
+    info about the square's state"""
+
+    def __init__(self, coord, name):
+        self.name = name
+        self.piece = None
+        self.controlledBy = []
+        self.pinned = False
+        self.coord = coord
+
+    def setPiece(self, piece, init=False):
+        self.piece = piece
+
+        # Don't update squares when initializing the pieces on their
+        # initial positions
+        if (not init) and (piece is not None):
+            self.piece.updateSquares()
+
+    def addControllingPiece(self, piece):
+        self.controlledBy.append(piece)
+
+    def removeControllingPiece(self, piece):
+        indexToRemove = self.controlledBy.index(piece)
+        del self.controlledBy[indexToRemove]
+
+    def getControllingPieces(self):
+        return self.controlledBy
+
+    def getCoord(self):
+        return self.coord
+
+    def hasPiece(self):
+        if self.piece is not None:
+            return True
+        return False
+
+    def getPiece(self):
+        return self.piece
+
+    def __str__(self):
+        return self.name
+    
+    def __repr__(self):
+        return self.name

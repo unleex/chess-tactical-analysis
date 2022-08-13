@@ -1,3 +1,4 @@
+"""This module handles the drawing of the board and its pieces."""
 from __future__ import annotations
 from tkinter.messagebox import NO
 from typing import TYPE_CHECKING
@@ -17,7 +18,7 @@ from PySide6.QtWidgets import QGraphicsSceneMouseEvent
 from interface import BoardToGameInterface
 
 
-# Create a list with the names of each square starting from 
+# Create a list with the names of each square starting from
 # [a8, b8, ..., h8, a7, b7, ..., h7, etc..]
 SQUARE_NAMES = [(l+n) for n in "87654321" for l in "abcdefgh"]
 
@@ -38,7 +39,7 @@ class BoardView(QGraphicsView):
     def getSquares(self):
         return self.scene().squares
 
-        
+
 class BoardScene(QGraphicsScene):
 
     # Make a little smaller than the view for some margins
@@ -77,10 +78,7 @@ class BoardScene(QGraphicsScene):
 
     def createSquares(self):
         """Create Square objects for every square on the board and put
-        them in a dictionary.
-        
-        The game parameter is only used to set up mouse events for the 
-        squares"""
+        them in a dictionary."""
         squares = {}
         squareNames = iter(SQUARE_NAMES)
         whiteOnEven = True
@@ -88,7 +86,7 @@ class BoardScene(QGraphicsScene):
         rowHeight = self.SQUARE_SIZE.height()
         rowCoord = [(x * rowHeight) for x in range(0, 8)]
         colCoord = [(y, y * rowHeight) for y in range(0, 8)]
-        
+
         for row in rowCoord:
             # At each row, white squares will be on the even numbered cols
             # or the odd numbered cols. c is the variable that knows the
@@ -108,29 +106,37 @@ class BoardScene(QGraphicsScene):
         return squares
 
     def drawBoard(self):
-        "Draws the board and places squares in the squares list"
+        "Draws all the Square objects to make a chess board"
         for sq in self.squares:
             self.addItem(self.squares[sq])
 
     def drawPiecesInInitialPos(self):
         """Draw the pieces in their initial positions"""
+        # These ids are appened to the piece's name so that they're unique
         for piece in self.INITIAL_POS:
             img = QPixmap(f":pieces\\{piece}")
-            for pos in self.INITIAL_POS[piece]:
+            for id_, pos in enumerate(self.INITIAL_POS[piece]):
                 imgItem = self.addPixmap(img)
                 sq = self.squares[pos]
-                # Use coordinates of square to position the piece
-                imgItem.setOffset(sq.getCoord())
-                # Let square know what piece it has
-                sq.setPiece(piece)
-                sq.setPiecePixmap(imgItem)
+                sq.setPiece(piece + str(id_), imgItem)
 
     def drawPieceOnNewSquare(self, newSquare: Square, prevSquare: Square):
-        """Removes piece from prevSquare and draws it on newSquare"""
+        """Moves a piece from prevSquare to newSquare"""
+        # Get name and pixmap of the piece from the prevSquare
+        piece = prevSquare.getPiece()
         piecePixmap = prevSquare.getPiecePixmap()
-        newSquare.setPiecePixmap(piecePixmap)
-        piecePixmap.setOffset(newSquare.getCoord())  # This redraws the piece to the square
+
+        # Then set the piece attributes to None
+        prevSquare.setPiece(None)
         prevSquare.setPiecePixmap(None)
+
+        # Move piece to the newSquare
+        piecePixmap.setOffset(newSquare.getCoord())
+
+        # Then update the piece attributes
+        prevSquare.setPiece(piece)
+        newSquare.setPiecePixmap(piecePixmap)
+
         self.highlightSquares([])  # Unhighlights squares
 
         # TODO: REMOVE. THIS IS FOR DEBUGGING
@@ -142,14 +148,27 @@ class BoardScene(QGraphicsScene):
     def highlightSquares(self, squares):
         """Change color of selected squares to highlight them"""
         # First unhighlight previously selected squares, if any
+        self.unhighlightSquares()
+
+        # Highlight selected squares
+        for sqName in squares:
+            sq = self.squares[sqName]
+            self.highlightedSquares.append((sq, sq.brush()))
+            sq.setBrush(Qt.yellow)
+
+    def unhighlightSquares(self):
+        """Unhighlight currently highlighted squares"""
         for sq, brush in self.highlightedSquares:
             sq.setBrush(brush)
         self.highlightedSquares.clear()
 
-        # Highlight selected squares    
-        for sq in squares:
-            self.highlightedSquares.append((sq, sq.brush()))
-            sq.setBrush(Qt.yellow)
+
+    def movePiece(self, squares):
+        """Move piece from squares[0] to squares[1]"""
+        from_sq, to_sq = self.squares[squares[0]], self.squares[squares[1]]
+        from_sq.movePieceTo(to_sq)
+
+        self.unhighlightSquares()
 
     def printSquares(self):
         """Prints all the squares and the pieces on each square.
@@ -164,13 +183,14 @@ class BoardScene(QGraphicsScene):
 
 
 class Square(QGraphicsRectItem):
-    """Represents a square on the chess board"""
+    """This class inherits from QGraphicsRectItem, so it is used to
+    draw a square on the board scene. Keeps track of the name of any
+    piece that is on it and has mouse events to handle when the user
+    clicks it."""
 
-    def __init__(self, rect: QRectF, color: Qt.GlobalColor, name: str):
+    def __init__(self, rect: QRectF, color: Qt.GlobalColor, name):
         super().__init__(rect)
-        # Set coordinate name
         self.name = name
-
         self.piece = None
         self.piecePixmap = None
 
@@ -181,44 +201,49 @@ class Square(QGraphicsRectItem):
         """When a square is clicked and there is a piece on that square,
         this function will highlight the squares that the piece can move
         to."""
-        whiteTurn = BoardToGameInterface.isWhiteTurn()
-        # If it is your colors turn, then simply check for what squares
-        # this piece can move to
-        if ((self.hasWhitePiece() and whiteTurn) 
-            or (self.hasBlackPiece() and (not whiteTurn))):
-            squares = BoardToGameInterface.selectSquare(self)
-            self.scene().highlightSquares(squares)
-        # If not, this square is either empty or occupied by enemy piece,
-        # so check if piece can move or capture to this square.
-        else:
-            squares = BoardToGameInterface.moveToSquare(self)
-            if squares is not None:
-                newSquare, prevSquare = squares
-                self.scene().drawPieceOnNewSquare(newSquare, prevSquare)
+        # Let the game know this square has been clicked
+        result = BoardToGameInterface.squareClicked(
+            self.name)
+
+        # Check result to know what to do
+        if result["action"] == "highlightSquares":
+            self.scene().highlightSquares(result["squares"])
+        elif result["action"] == "movePiece":
+            self.scene().movePiece(result["squares"])
 
         return super().mousePressEvent(event)
 
-    def setPiece(self, piece: str):
+    def setPiece(self, piece: str, pixmap: str):
+        """Sets a piece to this square. Has the effect of visually moving
+        the piece to this square on the board."""
+        # Must come first, as it checks the current value of self.piece
+        self.setPiecePixmap(pixmap)
+
         self.piece = piece
 
     def getPiece(self):
         return self.piece
 
+    def movePieceTo(self, square_to):
+        """Moves the piece on this square to another square"""
+        piece, pixmap = self.piece, self.piecePixmap
+        self.piece = self.piecePixmap = None
+
+        square_to.setPiece(piece, pixmap)
+
     def setPiecePixmap(self, pixmap: QGraphicsPixmapItem):
-        """Gives pixmap item of the piece to the square"""
-        # If pixmap is not None, then a piece has entered this square
-        # and a reference to its pixmap is being given. If there was
-        # a piece on this square that was captured, its pixmap needs
-        # to be deleted off the board first.g
-        if pixmap is not None:
+        """Gives a reference to the square of the pixmap item of the piece
+        on this square."""
+        if self.hasPiece():
+            # If there was a piece on this square, it was captured
+            # and its pixmap can be deleted off the scene
             self.scene().removeItem(self.piecePixmap)
+        
+        pixmap.setOffset(self.getCoord())  # moves img of piece to sq
         self.piecePixmap = pixmap
 
     def getPiecePixmap(self):
         return self.piecePixmap
-
-    def getName(self):
-        return self.name
 
     def getCoord(self):
         return self.rect().topLeft()
@@ -231,18 +256,3 @@ class Square(QGraphicsRectItem):
             return False
         return True
 
-    def hasWhitePiece(self):
-        if not self.hasPiece():
-            return False
-
-        if self.piece[0] == "w":
-            return True
-        return False
-    
-    def hasBlackPiece(self):
-        if not self.hasPiece():
-            return False
-
-        if self.piece[0] == "b":
-            return True
-        return False

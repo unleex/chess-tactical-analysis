@@ -68,19 +68,19 @@ class ChessGame(QWidget):
             # Add bishops
             if i == 2 or i == 5:
                 p1 = Bishop(isWhite=True, square=self.squares[i][0])
-                p2 = Bishop(isWhite=True, square=self.squares[i][7])
+                p2 = Bishop(isWhite=False, square=self.squares[i][7])
                 self.pieces.extend((p1, p2))
 
             # Add queens
             if i == 3:
                 p1 = Queen(isWhite=True, square=self.squares[i][0])
-                p2 = Queen(isWhite=True, square=self.squares[i][7])
+                p2 = Queen(isWhite=False, square=self.squares[i][7])
                 self.pieces.extend((p1, p2))
 
             # Add kings
             if i == 4:
                 p1 = King(isWhite=True, square=self.squares[i][0])
-                p2 = King(isWhite=True, square=self.squares[i][7])
+                p2 = King(isWhite=False, square=self.squares[i][7])
                 self.pieces.extend((p1, p2))
 
         for piece in self.pieces:

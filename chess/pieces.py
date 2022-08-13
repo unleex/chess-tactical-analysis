@@ -72,15 +72,25 @@ class Piece():
         if not init:
             logger.pieceUpdatedSquares(self)
 
-    def clearTrackedSquares(self):
-        """Goes through their controlledSquares list and removes the piece
-        from their controllingPiece lists. Also clears the piece's
-        controlledSquares list as it will be refreshed. This will be called
+    def clearTrackedAndControlledSquares(self):
+        """Goes through a squares' trackedSquares list and removes the piece
+        from their trackingPiece lists. Goes through a squares' controlledBy list
+        and removes the piece from their controlledBy list. Also clears the piece's
+        controlledSquares and moves list as they will be refreshed. This will be called
         whenever a piece is updating their squares due to a move."""
         for sq in self.trackedSquares:
             sq.removeTrackingPiece(self)
+        for sq in self.moves:
+            sq.removeControllingPiece(self)
         
         self.trackedSquares.clear()
+        self.moves.clear()
+
+    def addMove(self, square):
+        """Adds square to moves list and adds the piece to the squares's
+        controlledBy list."""
+        self.moves.append(square)
+        square.addControllingPiece(self)
 
     def addPinningPiece(self, piece, allowedSquares):
         self.pinnedBy[piece] = allowedSquares
@@ -135,43 +145,66 @@ class Pawn(Piece):
 
     def __init__(self, isWhite, square):
         super().__init__(isWhite, square)
+        self.controlledSquares = []
 
     def updateSquares(self, init=False):
         """Gets the squares this pawn can move to and updates the state
         of any squares that this pawn affects."""
-        self.clearTrackedSquares()
+        self.clearTrackedAndControlledSquares()
         coord = self.square.getCoord()
         squares = Board.getSquares()
 
         self.updateMoves()
 
-        if coord[0] != 0:
-            sq = squares[coord[0]-1][coord[1]+1]
-            self.addTrackedSquare(sq)
-        if coord[0] != 7:
-            sq = squares[coord[0]+1][coord[1]+1]
-            self.addTrackedSquare(sq)
+        if self.isWhite:
+            if coord[0] != 0:
+                sq = squares[coord[0]-1][coord[1]+1]
+                self.addTrackedSquare(sq)
+                self.controlledSquares.append(sq)
+                sq.addControllingPiece(self)
+                if sq.hasPiece() and self.isOppositeColorAs(sq.getPiece()):
+                    self.addMove(sq)
+            if coord[0] != 7:
+                sq = squares[coord[0]+1][coord[1]+1]
+                self.addTrackedSquare(sq)
+                self.controlledSquares.append(sq)
+                sq.addControllingPiece(self)
+                if sq.hasPiece() and self.isOppositeColorAs(sq.getPiece()):
+                    self.addMove(sq)
+        else:
+            if coord[0] != 0:
+                sq = squares[coord[0]-1][coord[1]-1]
+                self.addTrackedSquare(sq)
+                self.controlledSquares.append(sq)
+                sq.addControllingPiece(self)
+                if sq.hasPiece() and self.isOppositeColorAs(sq.getPiece()):
+                    self.addMove(sq)
+            if coord[0] != 7:
+                sq = squares[coord[0]+1][coord[1]-1]
+                self.addTrackedSquare(sq)
+                self.controlledSquares.append(sq)
+                sq.addControllingPiece(self)
+                if sq.hasPiece() and self.isOppositeColorAs(sq.getPiece()):
+                    self.addMove(sq)
 
         super().updateSquares(init=init)
 
     def updateMoves(self):
         """Updates the possible squares this pawn can move to"""
-        self.moves.clear()
         coord = self.square.getCoord()
         squares = Board.getSquares()
 
         if self.isWhite:
             sq = squares[coord[0]][coord[1]+1]
             self.addTrackedSquare(sq)
-
             if not sq.hasPiece():
-                self.moves.append(sq)
+                self.addMove(sq)
                 if coord[1] == 1:  # If pawn is still on 2nd rank
                     sq = squares[coord[0]][coord[1]+2]
                     self.addTrackedSquare(sq)
 
                     if not sq.hasPiece():
-                        self.moves.append(sq)
+                        self.addMove(sq)
         else:
             sq = squares[coord[0]][coord[1]-1]
             self.addTrackedSquare(sq)
@@ -182,6 +215,23 @@ class Pawn(Piece):
                     self.addTrackedSquare(sq)
                     if not sq.hasPiece():
                         self.moves.append(sq)
+
+    def clearTrackedAndControlledSquares(self):
+        for sq in self.trackedSquares:
+            sq.removeTrackingPiece(self)
+        for sq in self.controlledSquares:
+            sq.removeControllingPiece(self)
+
+        self.trackedSquares.clear()
+        self.controlledSquares.clear()
+        self.moves.clear()
+
+    def addMove(self, square):
+        # Adds move to Pawn's moves list without 'controlling' the square.
+        # This is done because a Pawn always controls its two upper
+        # adjacent squares. This function enables them to move there, but
+        # the square is already 'controlled'.
+        self.moves.append(square)
     
 
 class Rook(Piece):
@@ -194,8 +244,7 @@ class Rook(Piece):
 
     def updateSquares(self, init=False):
         """Updates the states of squares this rook can move to"""
-        self.clearTrackedSquares()
-        self.moves.clear()
+        self.clearTrackedAndControlledSquares()
 
         coord = self.square.getCoord()
         squares = Board.getSquares()
@@ -236,14 +285,14 @@ class Rook(Piece):
                     # If piece is of opposite color, add to moves list.
                     if canAddToMoves:
                         if self.isOppositeColorAs(piece):
-                            self.moves.append(sq)
+                            self.addMove(sq)
                             canAddToMoves = False
                         else:
                             canAddToMoves = False
                 else:
                     # Everything that needs to happen if there is no piece
                     if canAddToMoves:
-                        self.moves.append(sq)
+                        self.addMove(sq)
 
         super().updateSquares(init=init)
                     

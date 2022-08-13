@@ -109,7 +109,6 @@ class ChessGame(QWidget):
         """"""
         coord = self.squareNameToCoord(squareName)
         sq = self.squares[coord[0]][coord[1]]
-        print(sq.getPiece())
 
         if sq.hasPiece():
             # If there is a piece on the clicked square, select the piece
@@ -223,6 +222,7 @@ class Square:
         self.name = name
         self.piece = None
         self.trackedBy = []
+        self.controlledBy = []
         self.pinned = False
         self.coord = coord
 
@@ -243,6 +243,16 @@ class Square:
 
     def getTrackingPieces(self):
         return self.trackedBy
+
+    def addControllingPiece(self, piece):
+        self.controlledBy.append(piece)
+    
+    def getControllingPieces(self):
+        return self.controlledBy
+    
+    def removeControllingPiece(self, piece):
+        indexToRemove = self.controlledBy.index(piece)
+        del self.controlledBy[indexToRemove]
 
     def getCoord(self):
         return self.coord

@@ -31,7 +31,8 @@ def showBoard(squares):
     for l in range(8):
         for n in range(8):
             sq = squares[l][n]
-            toLog += f"{str(sq)}: {sq.getTrackingPieces()}\n"
+            toLog += "{} | controlledBy: {:<50} | trackedBy: {:<50}\n".format(
+                str(sq), str(sq.getControllingPieces()), str(sq.getTrackingPieces()))
     BOARD_LOG_FILE.write(toLog)
     BOARD_LOG_FILE.flush()
 

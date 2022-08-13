@@ -222,7 +222,7 @@ class Square:
     def __init__(self, coord, name):
         self.name = name
         self.piece = None
-        self.controlledBy = []
+        self.trackedBy = []
         self.pinned = False
         self.coord = coord
 
@@ -234,15 +234,15 @@ class Square:
         if (not init) and (piece is not None):
             self.piece.updateSquares()
 
-    def addControllingPiece(self, piece):
-        self.controlledBy.append(piece)
+    def addTrackingPiece(self, piece):
+        self.trackedBy.append(piece)
 
-    def removeControllingPiece(self, piece):
-        indexToRemove = self.controlledBy.index(piece)
-        del self.controlledBy[indexToRemove]
+    def removeTrackingPiece(self, piece):
+        indexToRemove = self.trackedBy.index(piece)
+        del self.trackedBy[indexToRemove]
 
-    def getControllingPieces(self):
-        return self.controlledBy
+    def getTrackingPieces(self):
+        return self.trackedBy
 
     def getCoord(self):
         return self.coord

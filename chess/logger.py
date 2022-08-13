@@ -31,7 +31,7 @@ def showBoard(squares):
     for l in range(8):
         for n in range(8):
             sq = squares[l][n]
-            toLog += f"{str(sq)}: {sq.getControllingPieces()}\n"
+            toLog += f"{str(sq)}: {sq.getTrackingPieces()}\n"
     BOARD_LOG_FILE.write(toLog)
     BOARD_LOG_FILE.flush()
 

@@ -29,7 +29,7 @@ class Piece():
             pieceType.b_id += 1
 
         self.isWhite = isWhite
-        self.controlledSquares = []
+        self.trackedSquares = []
         self.moves = []
         self.pinning = []
         self.pinnedBy = {}
@@ -42,9 +42,9 @@ class Piece():
         """"""
         ...
 
-    def addControlledSquare(self, square):
-        self.controlledSquares.append(square)
-        square.addControllingPiece(self)
+    def addTrackedSquare(self, square):
+        self.trackedSquares.append(square)
+        square.addTrackingPiece(self)
 
     def setSquare(self, square):
         """Sets a square to this piece. Called when this piece moves to
@@ -56,10 +56,10 @@ class Piece():
         self.square.setPiece(self)
         
         # Get all pieces that could be affected by the move
-        old_square_controllers = set(old_square.getControllingPieces())
-        new_square_controllers = set(self.square.getControllingPieces())
+        oldSquareTrackers = set(old_square.getTrackingPieces())
+        newSquareTrackers = set(self.square.getTrackingPieces())
 
-        piecesToUpdate = old_square_controllers.union(new_square_controllers)
+        piecesToUpdate = oldSquareTrackers.union(newSquareTrackers)
 
         logger.pieceMoved(self, piecesToUpdate)  # Marks the start
         for piece in piecesToUpdate:
@@ -72,15 +72,15 @@ class Piece():
         if not init:
             logger.pieceUpdatedSquares(self)
 
-    def clearControlledSquares(self):
+    def clearTrackedSquares(self):
         """Goes through their controlledSquares list and removes the piece
         from their controllingPiece lists. Also clears the piece's
         controlledSquares list as it will be refreshed. This will be called
         whenever a piece is updating their squares due to a move."""
-        for sq in self.controlledSquares:
-            sq.removeControllingPiece(self)
+        for sq in self.trackedSquares:
+            sq.removeTrackingPiece(self)
         
-        self.controlledSquares.clear()
+        self.trackedSquares.clear()
 
     def addPinningPiece(self, piece, allowedSquares):
         self.pinnedBy[piece] = allowedSquares
@@ -97,7 +97,7 @@ class Piece():
 
     def __str__(self):
         toPrint = (f"{self.name} on square {self.square.name}\n"
-                   f"Controlling: {self.controlledSquares}\n"
+                   f"Controlling: {self.trackedSquares}\n"
                    f"Pinned By: {self.pinnedBy}\n"
                    f"Moves: {self.moves}\n" + "-"*20)
         return toPrint
@@ -139,7 +139,7 @@ class Pawn(Piece):
     def updateSquares(self, init=False):
         """Gets the squares this pawn can move to and updates the state
         of any squares that this pawn affects."""
-        self.clearControlledSquares()
+        self.clearTrackedSquares()
         coord = self.square.getCoord()
         squares = Board.getSquares()
 
@@ -147,10 +147,10 @@ class Pawn(Piece):
 
         if coord[0] != 0:
             sq = squares[coord[0]-1][coord[1]+1]
-            self.addControlledSquare(sq)
+            self.addTrackedSquare(sq)
         if coord[0] != 7:
             sq = squares[coord[0]+1][coord[1]+1]
-            self.addControlledSquare(sq)
+            self.addTrackedSquare(sq)
 
         super().updateSquares(init=init)
 
@@ -162,24 +162,24 @@ class Pawn(Piece):
 
         if self.isWhite:
             sq = squares[coord[0]][coord[1]+1]
-            self.addControlledSquare(sq)
+            self.addTrackedSquare(sq)
 
             if not sq.hasPiece():
                 self.moves.append(sq)
                 if coord[1] == 1:  # If pawn is still on 2nd rank
                     sq = squares[coord[0]][coord[1]+2]
-                    self.addControlledSquare(sq)
+                    self.addTrackedSquare(sq)
 
                     if not sq.hasPiece():
                         self.moves.append(sq)
         else:
             sq = squares[coord[0]][coord[1]-1]
-            self.addControlledSquare(sq)
+            self.addTrackedSquare(sq)
             if not sq.hasPiece():
                 self.moves.append(sq)
                 if coord[1] == 6:  # If pawn is still on 7th rank
                     sq = squares[coord[0]][coord[1]-2]
-                    self.addControlledSquare(sq)
+                    self.addTrackedSquare(sq)
                     if not sq.hasPiece():
                         self.moves.append(sq)
     
@@ -194,7 +194,7 @@ class Rook(Piece):
 
     def updateSquares(self, init=False):
         """Updates the states of squares this rook can move to"""
-        self.clearControlledSquares()
+        self.clearTrackedSquares()
         self.moves.clear()
 
         coord = self.square.getCoord()
@@ -215,7 +215,7 @@ class Rook(Piece):
                 piece = sq.getPiece()
                 
                 # Update Piece and Square's control vars
-                self.addControlledSquare(sq)
+                self.addTrackedSquare(sq)
 
                 # Everything that needs to happen if there is a piece
                 if sq.hasPiece():

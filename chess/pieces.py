@@ -130,13 +130,97 @@ class King(Piece):
     w_id = 0
     b_id = 0
     pieceName = "King"
-    pass
+    
+    def __init__(self, isWhite, square):
+        super().__init__(isWhite, square)
+
+    def updateSquares(self, init=False):
+        self.clearTrackedAndControlledSquares()
+        coord = self.square.getCoord()
+        squares = Board.getSquares()
+
+        direction = (
+            (1,0), (0, 1), (-1, 0), (0, -1),
+            (1, 1), (1, -1), (-1, -1), (-1, 1))
+        
+        for d in direction:
+            new_coord = coord[0] + d[0], coord[1] + d[1]
+            if ((new_coord[0] > 7 or new_coord[1] > 7)
+                    or (new_coord[0] < 0 or new_coord[1] < 0)):
+                continue
+
+            sq = squares[new_coord[0]][new_coord[1]]
+            self.addTrackedSquare(sq)
+            if not sq.hasPiece() or self.isOppositeColorAs(sq.getPiece()):
+                self.addMove(sq)
+
+        super().updateSquares(init=init)
+
 
 class Queen(Piece):
     w_id = 0
     b_id = 0
     pieceName = "Queen"
-    pass
+    
+    def __init__(self, isWhite, square):
+        super().__init__(isWhite, square)
+
+    def updateSquares(self, init=False):
+        self.clearTrackedAndControlledSquares()
+
+        coord = self.square.getCoord()
+        squares = Board.getSquares()
+
+        directions = (
+            (1,0), (0, 1), (-1, 0), (0, -1),
+            (1, 1), (1, -1), (-1, -1), (-1, 1))
+        
+        for d in directions:
+            canAddToMoves = True
+            piecesOnRankOrFile = []
+            for i in range(1, 8):
+                sqCoords = coord[0] + d[0]*i, coord[1] + d[1]*i
+                if (sqCoords[0] == 8 or sqCoords[1] == 8  # End of file or rank 
+                    or sqCoords[0] == -1 or sqCoords[1] == -1):  # No negs
+                    break
+
+                sq = squares[sqCoords[0]][sqCoords[1]]
+                piece = sq.getPiece()
+                
+                # Update Piece and Square's control vars
+                self.addTrackedSquare(sq)
+
+                # Everything that needs to happen if there is a piece
+                if sq.hasPiece():
+
+                    # Check if piece is a king. If piece is a king of 
+                    # opposite color, determine if there is an enemy 
+                    # piece in front of it that should be pinned.
+                    if piece.pieceName == "King" and self.isOppositeColorAs(piece):
+                        if (len(piecesOnRankOrFile) == 1
+                                and (self.isOppositeColorAs(piecesOnRankOrFile[0]))):
+                            self.pinPiece(piece, d)
+                        
+                    # Track pieces on the rank or file. Used to
+                    # determine if a piece should be pinned if a
+                    # king is encountered.
+                    piecesOnRankOrFile.append(piece)
+                
+                    # If piece is of opposite color, add to moves list.
+                    if canAddToMoves:
+                        if self.isOppositeColorAs(piece):
+                            self.addMove(sq)
+                            canAddToMoves = False
+                        else:
+                            canAddToMoves = False
+                else:
+                    # Everything that needs to happen if there is no piece
+                    if canAddToMoves:
+                        self.addMove(sq)
+
+        super().updateSquares(init=init)
+
+
 
 class Pawn(Piece):
     w_id = 0
@@ -354,4 +438,59 @@ class Bishop(Piece):
     w_id = 0
     b_id = 0
     pieceName = "Bishop"
-    pass
+    
+    def __init__(self, isWhite, square):
+        super().__init__(isWhite, square)
+
+    def updateSquares(self, init=False):
+        self.clearTrackedAndControlledSquares()
+        coord = self.square.getCoord()
+        squares = Board.getSquares()
+
+        directions = (
+            (1, 1), (1, -1), (-1, -1), (-1, 1)
+        )
+
+        for d in directions:
+            canAddToMoves = True
+            piecesOnRankOrFile = []
+            for i in range(1, 8):
+                sqCoords = coord[0] + d[0]*i, coord[1] + d[1]*i
+                if (sqCoords[0] == 8 or sqCoords[1] == 8  # End of diagonal 
+                    or sqCoords[0] == -1 or sqCoords[1] == -1):  # No negs
+                    break
+
+                sq = squares[sqCoords[0]][sqCoords[1]]
+                piece = sq.getPiece()
+                
+                # Update Piece and Square's control vars
+                self.addTrackedSquare(sq)
+
+                # Everything that needs to happen if there is a piece
+                if sq.hasPiece():
+
+                    # Check if piece is a king. If piece is a king of 
+                    # opposite color, determine if there is an enemy 
+                    # piece in front of it that should be pinned.
+                    if piece.pieceName == "King" and self.isOppositeColorAs(piece):
+                        if (len(piecesOnRankOrFile) == 1
+                                and (self.isOppositeColorAs(piecesOnRankOrFile[0]))):
+                            self.pinPiece(piece, d)
+                        
+                    # Track pieces on the rank or file. Used to
+                    # determine if a piece should be pinned if a
+                    # king is encountered.
+                    piecesOnRankOrFile.append(piece)
+                
+                    # If piece is of opposite color, add to moves list.
+                    if canAddToMoves:
+                        if self.isOppositeColorAs(piece):
+                            self.addMove(sq)
+                            canAddToMoves = False
+                        else:
+                            canAddToMoves = False
+                else:
+                    # Everything that needs to happen if there is no piece
+                    if canAddToMoves:
+                        self.addMove(sq)
+

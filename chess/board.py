@@ -36,9 +36,6 @@ class BoardView(QGraphicsView):
         scene = BoardScene()
         self.setScene(scene)
 
-    def getSquares(self):
-        return self.scene().squares
-
 
 class BoardScene(QGraphicsScene):
 
@@ -120,31 +117,6 @@ class BoardScene(QGraphicsScene):
                 sq = self.squares[pos]
                 sq.setPiece(piece + str(id_), imgItem)
 
-    def drawPieceOnNewSquare(self, newSquare: Square, prevSquare: Square):
-        """Moves a piece from prevSquare to newSquare"""
-        # Get name and pixmap of the piece from the prevSquare
-        piece = prevSquare.getPiece()
-        piecePixmap = prevSquare.getPiecePixmap()
-
-        # Then set the piece attributes to None
-        prevSquare.setPiece(None)
-        prevSquare.setPiecePixmap(None)
-
-        # Move piece to the newSquare
-        piecePixmap.setOffset(newSquare.getCoord())
-
-        # Then update the piece attributes
-        prevSquare.setPiece(piece)
-        newSquare.setPiecePixmap(piecePixmap)
-
-        self.highlightSquares([])  # Unhighlights squares
-
-        # TODO: REMOVE. THIS IS FOR DEBUGGING
-        self.printSquares()
-
-    def getSquares(self) -> dict:
-        return self.squares
-
     def highlightSquares(self, squares):
         """Change color of selected squares to highlight them"""
         # First unhighlight previously selected squares, if any
@@ -161,7 +133,6 @@ class BoardScene(QGraphicsScene):
         for sq, brush in self.highlightedSquares:
             sq.setBrush(brush)
         self.highlightedSquares.clear()
-
 
     def movePiece(self, squares):
         """Move piece from squares[0] to squares[1]"""

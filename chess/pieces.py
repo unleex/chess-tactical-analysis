@@ -38,10 +38,6 @@ class Piece():
         # Adds itself to a square, which starts things off
         self.square = square
         self.square.setPiece(self, init=True)
-    
-    def getPossibleSquares(self):
-        """"""
-        ...
 
     def addTrackedSquare(self, square):
         self.trackedSquares.append(square)

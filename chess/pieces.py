@@ -31,6 +31,7 @@ class Piece():
         self.isWhite = isWhite
         self.trackedSquares = []
         self.moves = []
+        self.nonMovesControlledSquares = []
         self.pinning = []
         self.pinnedBy = {}
 
@@ -45,6 +46,10 @@ class Piece():
     def addTrackedSquare(self, square):
         self.trackedSquares.append(square)
         square.addTrackingPiece(self)
+
+    def addNonMoveControlledSquare(self, square):
+        self.nonMovesControlledSquares.append(square)
+        square.addControllingPiece(self)
 
     def setSquare(self, square):
         """Sets a square to this piece. Called when this piece moves to
@@ -82,9 +87,12 @@ class Piece():
             sq.removeTrackingPiece(self)
         for sq in self.moves:
             sq.removeControllingPiece(self)
+        for sq in self.nonMovesControlledSquares:
+            sq.removeControllingPiece(self)
         
         self.trackedSquares.clear()
         self.moves.clear()
+        self.nonMovesControlledSquares.clear()
 
     def addMove(self, square):
         """Adds square to moves list and adds the piece to the squares's
@@ -139,11 +147,11 @@ class King(Piece):
         coord = self.square.getCoord()
         squares = Board.getSquares()
 
-        direction = (
+        directions = (
             (1,0), (0, 1), (-1, 0), (0, -1),
             (1, 1), (1, -1), (-1, -1), (-1, 1))
         
-        for d in direction:
+        for d in directions:
             new_coord = coord[0] + d[0], coord[1] + d[1]
             if ((new_coord[0] > 7 or new_coord[1] > 7)
                     or (new_coord[0] < 0 or new_coord[1] < 0)):
@@ -157,9 +165,14 @@ class King(Piece):
                 if (self.isOppositeColorAs(sq.getPiece())
                         and (not ctrledByOppColor)):
                     self.addMove(sq)
+                else:
+                    self.addNonMoveControlledSquare(sq)
             else:
                 if not ctrledByOppColor:
                     self.addMove(sq)
+                else:
+                    self.addNonMoveControlledSquare(sq)
+                
         
         super().updateSquares(init=init)
 
@@ -219,6 +232,7 @@ class Queen(Piece):
                             self.addMove(sq)
                             canAddToMoves = False
                         else:
+                            self.addNonMoveControlledSquare(sq)
                             canAddToMoves = False
                 else:
                     # Everything that needs to happen if there is no piece
@@ -379,6 +393,7 @@ class Rook(Piece):
                             self.addMove(sq)
                             canAddToMoves = False
                         else:
+                            self.addNonMoveControlledSquare(sq)
                             canAddToMoves = False
                 else:
                     # Everything that needs to happen if there is no piece
@@ -437,6 +452,8 @@ class Knight(Piece):
             self.addTrackedSquare(sq)
             if not sq.hasPiece() or self.isOppositeColorAs(sq.getPiece()):
                 self.addMove(sq)
+            else:
+                self.addNonMoveControlledSquare(sq)
 
         super().updateSquares(init=init)
     
@@ -495,6 +512,7 @@ class Bishop(Piece):
                             self.addMove(sq)
                             canAddToMoves = False
                         else:
+                            self.addNonMoveControlledSquare(sq)
                             canAddToMoves = False
                 else:
                     # Everything that needs to happen if there is no piece

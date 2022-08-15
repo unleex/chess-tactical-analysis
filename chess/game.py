@@ -17,17 +17,19 @@ class ChessGame(QWidget):
         self.board = BoardView()
         self.gameInfo = GameInfo()
         
-        # Make a board state
-        self.squares = [[], [], [], [], [], [], [], []]
-        self.pieces = []
-        Board.setSquares(self.squares)  # So that pieces have access to squares
-        self.initializeBoardState()
-
         # Game variables
         self.turn = 0
         self.whiteTurn = True
         self.selectedPiece = None
         self.selectedSquare = None  # square of the selected piece
+        self.wKing = None
+        self.bKing = None
+
+        # Make a board state
+        self.squares = [[], [], [], [], [], [], [], []]
+        self.pieces = []
+        Board.setSquares(self.squares)  # So that pieces have access to squares
+        self.initializeBoardState()
 
         self.layout = QHBoxLayout()
         self.layout.setContentsMargins(0,0,0,0)
@@ -79,9 +81,9 @@ class ChessGame(QWidget):
 
             # Add kings
             if i == 4:
-                p1 = King(isWhite=True, square=self.squares[i][0])
-                p2 = King(isWhite=False, square=self.squares[i][7])
-                self.pieces.extend((p1, p2))
+                self.wKing = King(isWhite=True, square=self.squares[i][0])
+                self.bKing = King(isWhite=False, square=self.squares[i][7])
+                self.pieces.extend((self.wKing, self.bKing))
 
         for piece in self.pieces:
             piece.updateSquares(init=True)
@@ -125,10 +127,20 @@ class ChessGame(QWidget):
             if (self.selectedPiece is not None 
                     and self.selectedPiece.canMoveTo(sq)):
                 self.selectedPiece.setSquare(sq) # Moves the piece to sq
+                
+                # After every turn, one of the kings will have their squares
+                # updated, as they could be restricted at any time and their
+                # trackedSquares list is not enough.
+                if self.whiteTurn:
+                    self.bKing.updateSquares()
+                else:
+                    self.wKing.updateSquares()
 
                 old_sq = self.selectedSquare  # Save the square the piece used to be on
                 self.selectedPiece = None
                 self.selectedSquare = None
+
+                self.whiteTurn = True if self.whiteTurn is False else False  # switch turns
 
                 logger.showBoard(self.squares)
 
@@ -256,7 +268,7 @@ class Square:
 
     def isControlledByOppositeColor(self, piece):
         for controllingPiece in self.controlledBy:
-            if not (controllingPiece.isWhite is piece.isWhite):
+            if controllingPiece.isOppositeColorAs(piece):
                 return True
         return False
 

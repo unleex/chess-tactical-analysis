@@ -32,8 +32,8 @@ class Piece():
         self.trackedSquares = []
         self.moves = []
         self.nonMovesControlledSquares = []
-        self.pinning = []
-        self.pinnedBy = {}
+        self.pinning = None
+        self.pinnedTo = []
 
         # Adds itself to a square, which starts things off
         self.square = square
@@ -78,6 +78,8 @@ class Piece():
         Their move generation and ability to pin is all the same, and
         they move in a 'linear' fashion."""
         self.clearTrackedAndControlledSquares()
+        if self.pinning is not None:  # If pinning a piece, unpin it
+            self.unpinPiece()
         coord = self.square.getCoord()
         squares = Board.getSquares()
 
@@ -105,7 +107,7 @@ class Piece():
                     if piece.pieceName == "King" and self.isOppositeColorAs(piece):
                         if (len(piecesOnRankOrFile) == 1
                                 and (self.isOppositeColorAs(piecesOnRankOrFile[0]))):
-                            self.pinPiece(piece, d)
+                            self.pinPiece(piecesOnRankOrFile[0], d, sq)
                         
                     # Track pieces on the rank or file. Used to
                     # determine if a piece should be pinned if a
@@ -151,8 +153,30 @@ class Piece():
         self.moves.append(square)
         square.addControllingPiece(self)
 
-    def addPinningPiece(self, piece, allowedSquares):
-        self.pinnedBy[piece] = allowedSquares
+    def pinPiece(self, piece, direction, kingSquare):
+        squares = Board.getSquares()
+        coord = self.square.getCoord()
+        allowedSquares = [self.square]
+
+        for i in range(8):
+            sq_coord = coord[0] + direction[0]*i, coord[1] + direction[1]*i
+            if sq_coord == kingSquare.getCoord():
+                break
+                
+            allowedSquares.append(squares[sq_coord[0]][sq_coord[1]])
+
+        piece.setPin(allowedSquares)
+        self.pinning = piece
+
+    def unpinPiece(self):
+        self.pinning.removePin()
+        self.pinning = None
+
+    def setPin(self, allowedSquares):
+        self.pinnedTo = allowedSquares
+
+    def removePin(self):
+        self.pinnedTo.clear()
 
     def isOppositeColorAs(self, piece):
         if self.isWhite is piece.isWhite:
@@ -167,7 +191,7 @@ class Piece():
     def __str__(self):
         toPrint = (f"{self.name} on square {self.square.name}\n"
                    f"Controlling: {self.trackedSquares}\n"
-                   f"Pinned By: {self.pinnedBy}\n"
+                   f"Pinned By: {self.pinnedTo}\n"
                    f"Moves: {self.moves}\n" + "-"*20)
         return toPrint
 
@@ -175,13 +199,22 @@ class Piece():
         return self.name
 
     def getMoves(self, nameOnly=False):
+        if self.pinnedTo:
+            moves = set(self.pinnedTo).intersection(set(self.moves))
+        else:
+            moves = self.moves
+
         if nameOnly:
             # Square.__str__ simply returns the name of a square
-            return [str(sq) for sq in self.moves]
-        return self.moves
+            return [str(sq) for sq in moves]
+        return moves
 
     def canMoveTo(self, square):
         """Checks if square is in this Piece's move list"""
+        if self.pinnedTo:
+            moves = set(self.pinnedTo).intersection(set(self.moves))
+            return square in moves
+        
         return square in self.moves
 
 
@@ -374,7 +407,7 @@ class Rook(Piece):
             allowedSquares.append(sq)
         
         self.pinning.append(piece)
-        piece.addPinningPiece(self, allowedSquares)
+        piece.setPinningPiece(self, allowedSquares)
 
 
 class Knight(Piece):

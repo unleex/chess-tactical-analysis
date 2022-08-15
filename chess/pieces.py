@@ -73,6 +73,61 @@ class Piece():
         if not init:
             logger.pieceUpdatedSquares(self)
 
+    def linearUpdateSquares(self, init=False):
+        """updateSquares() implementation for Bishops, Rooks and Queens.
+        Their move generation and ability to pin is all the same, and
+        they move in a 'linear' fashion."""
+        self.clearTrackedAndControlledSquares()
+        coord = self.square.getCoord()
+        squares = Board.getSquares()
+
+        for d in self.directions:
+            canAddToMoves = True
+            piecesOnRankOrFile = []
+            for i in range(1, 8):
+                sqCoords = coord[0] + d[0]*i, coord[1] + d[1]*i
+                if (sqCoords[0] == 8 or sqCoords[1] == 8  # End of file or rank 
+                    or sqCoords[0] == -1 or sqCoords[1] == -1):  # No negs
+                    break
+
+                sq = squares[sqCoords[0]][sqCoords[1]]
+                piece = sq.getPiece()
+                
+                # Update Piece and Square's control vars
+                self.addTrackedSquare(sq)
+
+                # Everything that needs to happen if there is a piece
+                if sq.hasPiece():
+
+                    # Check if piece is a king. If piece is a king of 
+                    # opposite color, determine if there is an enemy 
+                    # piece in front of it that should be pinned.
+                    if piece.pieceName == "King" and self.isOppositeColorAs(piece):
+                        if (len(piecesOnRankOrFile) == 1
+                                and (self.isOppositeColorAs(piecesOnRankOrFile[0]))):
+                            self.pinPiece(piece, d)
+                        
+                    # Track pieces on the rank or file. Used to
+                    # determine if a piece should be pinned if a
+                    # king is encountered.
+                    piecesOnRankOrFile.append(piece)
+                
+                    # If piece is of opposite color, add to moves list.
+                    if canAddToMoves:
+                        if self.isOppositeColorAs(piece):
+                            self.addMove(sq)
+                            canAddToMoves = False
+                        else:
+                            self.addNonMoveControlledSquare(sq)
+                            canAddToMoves = False
+                else:
+                    # Everything that needs to happen if there is no piece
+                    if canAddToMoves:
+                        self.addMove(sq)
+
+        if not init:
+            logger.pieceUpdatedSquares(self)
+
     def clearTrackedAndControlledSquares(self):
         """Goes through a squares' trackedSquares list and removes the piece
         from their trackingPiece lists. Goes through a squares' controlledBy list
@@ -180,63 +235,13 @@ class Queen(Piece):
     
     def __init__(self, isWhite, square):
         super().__init__(isWhite, square)
+        self.directions = (
+            (1, 0), (0, -1), (-1, 0), (0, 1),
+            (1, 1), (1, -1), (-1, -1), (-1, 1)
+        )
 
     def updateSquares(self, init=False):
-        self.clearTrackedAndControlledSquares()
-
-        coord = self.square.getCoord()
-        squares = Board.getSquares()
-
-        directions = (
-            (1,0), (0, 1), (-1, 0), (0, -1),
-            (1, 1), (1, -1), (-1, -1), (-1, 1))
-        
-        for d in directions:
-            canAddToMoves = True
-            piecesOnRankOrFile = []
-            for i in range(1, 8):
-                sqCoords = coord[0] + d[0]*i, coord[1] + d[1]*i
-                if (sqCoords[0] == 8 or sqCoords[1] == 8  # End of file or rank 
-                    or sqCoords[0] == -1 or sqCoords[1] == -1):  # No negs
-                    break
-
-                sq = squares[sqCoords[0]][sqCoords[1]]
-                piece = sq.getPiece()
-                
-                # Update Piece and Square's control vars
-                self.addTrackedSquare(sq)
-
-                # Everything that needs to happen if there is a piece
-                if sq.hasPiece():
-
-                    # Check if piece is a king. If piece is a king of 
-                    # opposite color, determine if there is an enemy 
-                    # piece in front of it that should be pinned.
-                    if piece.pieceName == "King" and self.isOppositeColorAs(piece):
-                        if (len(piecesOnRankOrFile) == 1
-                                and (self.isOppositeColorAs(piecesOnRankOrFile[0]))):
-                            self.pinPiece(piece, d)
-                        
-                    # Track pieces on the rank or file. Used to
-                    # determine if a piece should be pinned if a
-                    # king is encountered.
-                    piecesOnRankOrFile.append(piece)
-                
-                    # If piece is of opposite color, add to moves list.
-                    if canAddToMoves:
-                        if self.isOppositeColorAs(piece):
-                            self.addMove(sq)
-                            canAddToMoves = False
-                        else:
-                            self.addNonMoveControlledSquare(sq)
-                            canAddToMoves = False
-                else:
-                    # Everything that needs to happen if there is no piece
-                    if canAddToMoves:
-                        self.addMove(sq)
-
-        super().updateSquares(init=init)
-
+        super().linearUpdateSquares(init)
 
 
 class Pawn(Piece):
@@ -342,61 +347,12 @@ class Rook(Piece):
 
     def __init__(self, isWhite, square):
         super().__init__(isWhite, square)
+        self.directions = (
+            (1, 0), (0, -1), (-1, 0), (0, 1)
+        )
 
     def updateSquares(self, init=False):
-        """Updates the states of squares this rook can move to"""
-        self.clearTrackedAndControlledSquares()
-
-        coord = self.square.getCoord()
-        squares = Board.getSquares()
-
-        directions = ((1,0), (0, 1), (-1, 0), (0, -1))
-        
-        for d in directions:
-            canAddToMoves = True
-            piecesOnRankOrFile = []
-            for i in range(1, 8):
-                sqCoords = coord[0] + d[0]*i, coord[1] + d[1]*i
-                if (sqCoords[0] == 8 or sqCoords[1] == 8  # End of file or rank 
-                    or sqCoords[0] == -1 or sqCoords[1] == -1):  # No negs
-                    break
-
-                sq = squares[sqCoords[0]][sqCoords[1]]
-                piece = sq.getPiece()
-                
-                # Update Piece and Square's control vars
-                self.addTrackedSquare(sq)
-
-                # Everything that needs to happen if there is a piece
-                if sq.hasPiece():
-
-                    # Check if piece is a king. If piece is a king of 
-                    # opposite color, determine if there is an enemy 
-                    # piece in front of it that should be pinned.
-                    if piece.pieceName == "King" and self.isOppositeColorAs(piece):
-                        if (len(piecesOnRankOrFile) == 1
-                                and (self.isOppositeColorAs(piecesOnRankOrFile[0]))):
-                            self.pinPiece(piece, d)
-                        
-                    # Track pieces on the rank or file. Used to
-                    # determine if a piece should be pinned if a
-                    # king is encountered.
-                    piecesOnRankOrFile.append(piece)
-                
-                    # If piece is of opposite color, add to moves list.
-                    if canAddToMoves:
-                        if self.isOppositeColorAs(piece):
-                            self.addMove(sq)
-                            canAddToMoves = False
-                        else:
-                            self.addNonMoveControlledSquare(sq)
-                            canAddToMoves = False
-                else:
-                    # Everything that needs to happen if there is no piece
-                    if canAddToMoves:
-                        self.addMove(sq)
-
-        super().updateSquares(init=init)
+        super().linearUpdateSquares(init)
                     
     def pinPiece(self, piece, direction):
         """Pins piece and gives the piece its allowed squares"""
@@ -461,57 +417,9 @@ class Bishop(Piece):
     
     def __init__(self, isWhite, square):
         super().__init__(isWhite, square)
-
-    def updateSquares(self, init=False):
-        self.clearTrackedAndControlledSquares()
-        coord = self.square.getCoord()
-        squares = Board.getSquares()
-
-        directions = (
+        self.directions = (
             (1, 1), (1, -1), (-1, -1), (-1, 1)
         )
 
-        for d in directions:
-            canAddToMoves = True
-            piecesOnRankOrFile = []
-            for i in range(1, 8):
-                sqCoords = coord[0] + d[0]*i, coord[1] + d[1]*i
-                if (sqCoords[0] == 8 or sqCoords[1] == 8  # End of diagonal 
-                    or sqCoords[0] == -1 or sqCoords[1] == -1):  # No negs
-                    break
-
-                sq = squares[sqCoords[0]][sqCoords[1]]
-                piece = sq.getPiece()
-                
-                # Update Piece and Square's control vars
-                self.addTrackedSquare(sq)
-
-                # Everything that needs to happen if there is a piece
-                if sq.hasPiece():
-
-                    # Check if piece is a king. If piece is a king of 
-                    # opposite color, determine if there is an enemy 
-                    # piece in front of it that should be pinned.
-                    if piece.pieceName == "King" and self.isOppositeColorAs(piece):
-                        if (len(piecesOnRankOrFile) == 1
-                                and (self.isOppositeColorAs(piecesOnRankOrFile[0]))):
-                            self.pinPiece(piece, d)
-                        
-                    # Track pieces on the rank or file. Used to
-                    # determine if a piece should be pinned if a
-                    # king is encountered.
-                    piecesOnRankOrFile.append(piece)
-                
-                    # If piece is of opposite color, add to moves list.
-                    if canAddToMoves:
-                        if self.isOppositeColorAs(piece):
-                            self.addMove(sq)
-                            canAddToMoves = False
-                        else:
-                            self.addNonMoveControlledSquare(sq)
-                            canAddToMoves = False
-                else:
-                    # Everything that needs to happen if there is no piece
-                    if canAddToMoves:
-                        self.addMove(sq)
-
+    def updateSquares(self, init=False):
+        super().linearUpdateSquares(init)

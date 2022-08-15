@@ -254,6 +254,12 @@ class Square:
         indexToRemove = self.controlledBy.index(piece)
         del self.controlledBy[indexToRemove]
 
+    def isControlledByOppositeColor(self, piece):
+        for controllingPiece in self.controlledBy:
+            if not (controllingPiece.isWhite is piece.isWhite):
+                return True
+        return False
+
     def getCoord(self):
         return self.coord
 

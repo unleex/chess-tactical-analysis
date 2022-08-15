@@ -151,9 +151,16 @@ class King(Piece):
 
             sq = squares[new_coord[0]][new_coord[1]]
             self.addTrackedSquare(sq)
-            if not sq.hasPiece() or self.isOppositeColorAs(sq.getPiece()):
-                self.addMove(sq)
+            ctrledByOppColor = sq.isControlledByOppositeColor(self)
 
+            if sq.hasPiece():
+                if (self.isOppositeColorAs(sq.getPiece())
+                        and (not ctrledByOppColor)):
+                    self.addMove(sq)
+            else:
+                if not ctrledByOppColor:
+                    self.addMove(sq)
+        
         super().updateSquares(init=init)
 
 

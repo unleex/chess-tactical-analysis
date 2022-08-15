@@ -111,10 +111,32 @@ class ChessGame(QWidget):
         """"""
         coord = self.squareNameToCoord(squareName)
         sq = self.squares[coord[0]][coord[1]]
+        piece = sq.getPiece()
 
         if sq.hasPiece():
-            # If there is a piece on the clicked square, select the piece
-            # and visually highlight where it can go.
+            # If there is a selected piece, and this square has an enemy piece,
+            # check if it can move to this square and capture.
+            if (self.selectedPiece is not None
+                    and self.selectedPiece.isOppositeColorAs(piece)
+                    and self.selectedPiece.canMoveTo(sq)):
+                
+                self.selectedPiece.setSquare(sq)
+
+                old_sq = self.selectedSquare
+                self.nextTurn()
+
+                return {
+                    "action": "movePiece",
+                    "squares": [str(old_sq), str(sq)]
+                }
+
+            # If there is a piece on the clicked square, check if it is
+            # its color's turn. If so, select the piece and visually
+            # highlight where it can go. If not, unhighlight any
+            # highlighted squares, if any.
+            if sq.getPiece().isWhite is not self.whiteTurn:
+                return {"action": "unhighlightSquares"}
+                
             self.selectedPiece = sq.getPiece()
             self.selectedSquare = sq
             return {
@@ -127,31 +149,36 @@ class ChessGame(QWidget):
             if (self.selectedPiece is not None 
                     and self.selectedPiece.canMoveTo(sq)):
                 self.selectedPiece.setSquare(sq) # Moves the piece to sq
-                
-                # After every turn, one of the kings will have their squares
-                # updated, as they could be restricted at any time and their
-                # trackedSquares list is not enough.
-                if self.whiteTurn:
-                    self.bKing.updateSquares()
-                else:
-                    self.wKing.updateSquares()
+                old_sq = self.selectedSquare
 
-                old_sq = self.selectedSquare  # Save the square the piece used to be on
-                self.selectedPiece = None
-                self.selectedSquare = None
-
-                self.whiteTurn = True if self.whiteTurn is False else False  # switch turns
-
-                logger.showBoard(self.squares)
+                self.nextTurn()
 
                 return {
                     "action": "movePiece",
                     "squares": [str(old_sq), str(sq)]
                 }
+            else:
+                # This can run if there is no selected piece or the
+                # selected piece cannot move to the selected square.
+                # Just unhighlight any highlighted squares, if any.
+                return {"action": "unhighlightSquares"}
 
+    def nextTurn(self):
+            # After every turn, one of the kings will have their squares
+            # updated, as they could be restricted at any time and their
+            # trackedSquares list is not enough to keep up.
+            if self.whiteTurn:
+                self.bKing.updateSquares()
+            else:
+                self.wKing.updateSquares()
 
-        
-        return {}
+            self.selectedPiece = None
+            self.selectedSquare = None
+
+            self.whiteTurn = True if self.whiteTurn is False else False  # switch turns
+
+            logger.showBoard(self.squares)
+
 
     def createMoveName(self, oldSquare: Square, newSquare: Square):
         """Creates a move name (eg. Nf3) from looking at a pieces'

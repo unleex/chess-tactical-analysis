@@ -266,8 +266,13 @@ class Square:
         self.coord = coord
 
     def setPiece(self, piece, init=False):
+        """Sets a piece to this square. If there was already a piece,
+        it is captured and their clearTrackedAndControlledSquares()
+        method is called."""
+        if self.piece is not None:
+            self.piece.clearTrackedAndControlledSquares()
+        
         self.piece = piece
-
         # Don't update squares when initializing the pieces on their
         # initial positions
         if (not init) and (piece is not None):

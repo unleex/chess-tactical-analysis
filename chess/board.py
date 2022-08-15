@@ -1,19 +1,10 @@
 """This module handles the drawing of the board and its pieces."""
 from __future__ import annotations
-from tkinter.messagebox import NO
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from movement import PieceMovements
-import sys
 import resources
-from PySide6.QtCore import (Qt, Slot, QSize, QSizeF, QRectF, QRect,
-    QPointF)
-from PySide6.QtGui import QBrush, QPen, QPixmap
-from PySide6.QtWidgets import (QApplication, QGraphicsScene,
-    QGraphicsView, QGraphicsRectItem, QGraphicsGridLayout,
-    QGraphicsLayoutItem, QGraphicsItem, QWidget,
-    QGraphicsWidget, QTextEdit, QPushButton,
-    QLabel, QGraphicsPixmapItem)
+from PySide6.QtCore import Qt, QSize, QRectF, QPointF
+from PySide6.QtGui import QBrush, QPixmap
+from PySide6.QtWidgets import (QGraphicsScene, QGraphicsView,
+    QGraphicsRectItem, QGraphicsPixmapItem)
 from PySide6.QtWidgets import QGraphicsSceneMouseEvent
 from interface import BoardToGameInterface
 

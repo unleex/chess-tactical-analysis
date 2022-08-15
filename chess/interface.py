@@ -2,7 +2,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from game import ChessGame
-    from board import Square
 
 class BoardToGameInterface:
     """Class that allows BoardView and Square class to communicate with

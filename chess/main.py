@@ -1,8 +1,6 @@
 import sys
-from board import BoardView, BoardScene
 from game import ChessGame
-from PySide6.QtWidgets import (QApplication, QWidget, QPushButton, QVBoxLayout,
-                               QSizePolicy)
+from PySide6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QApplication
 from PySide6.QtCore import Qt
 import logger
 

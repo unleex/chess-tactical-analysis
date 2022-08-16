@@ -1,3 +1,4 @@
+from sys import prefix
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QFrame, QLabel,
                                QGridLayout, QVBoxLayout)
 from PySide6.QtCore import Qt
@@ -122,11 +123,15 @@ class ChessGame(QWidget):
                 
                 self.selectedPiece.setSquare(sq)
                 old_sq = self.selectedSquare
+                turn = self.whiteTurn
                 self.nextTurn()
-
                 # Checks if a king is checked and whether it is checkmate
                 # or not.
-                self.check() 
+                checked = self.check()
+                self.gameInfo.moveList.addMove(
+                    self.createMoveName(old_sq, sq, capture=True, **checked),
+                    turn
+                )
 
                 return {
                     "action": "movePiece",
@@ -153,9 +158,15 @@ class ChessGame(QWidget):
                     and self.selectedPiece.canMoveTo(sq)):
                 self.selectedPiece.setSquare(sq) # Moves the piece to sq
                 old_sq = self.selectedSquare
+                turn = self.whiteTurn  # save turn for MoveList.addMove
                 self.nextTurn()
                 
-                self.check()
+                checked = self.check()
+
+                self.gameInfo.moveList.addMove(
+                    self.createMoveName(old_sq, sq, capture=False, **checked),
+                    turn
+                )
 
                 return {
                     "action": "movePiece",
@@ -185,43 +196,60 @@ class ChessGame(QWidget):
 
     def check(self):
         """Checks whether a king is checked and whether it is checkmate or not"""
+        noCheck = {"check": False, "mate": False}
+        checkNoMate = {"check": True, "mate": False}
+        checkmate = {"check": True, "mate": True}
+
         if self.wKing.isChecked():
             # If king has no moves, check if a piece can block or capture the check
             if not self.wKing.getMoves():
                 for piece in self.pieces:
                     if piece.isSameColorAs(self.wKing) and piece.getMoves():
-                        return
-                    
+                        return checkNoMate
                 # Game over
                 print("Black wins")
+                return checkmate
+            return checkNoMate
 
         elif self.bKing.isChecked():
             if not self.bKing.getMoves():
                 for piece in self.pieces:
                     if piece.isSameColorAs(self.bKing) and piece.getMoves():
-                        return
+                        return checkNoMate
                 
                 # Game over
                 print("White wins")
+                return checkmate
+            return checkNoMate
+        
+        return noCheck
 
-    def createMoveName(self, oldSquare: Square, newSquare: Square):
+    def createMoveName(self, oldSquare, newSquare, capture = False, check = False,
+                       mate = False):
         """Creates a move name (eg. Nf3) from looking at a pieces'
         current square (oldSquare) and the square it's going to move
         to (newSquare)"""
+        pieceName = newSquare.getPiece().pieceName
         # Abbreviation for knight in moves is N, as the King takes K
-        if (pieceName := oldSquare.getPiece()[1:]) == "Knight":
-            abbr = "N"
+        if (pieceName) == "Knight":
+            prefix = "N"
+        elif pieceName == "Pawn" and capture:
+            prefix = str(oldSquare)[0]
         elif pieceName == "Pawn":
-            abbr = ""
+            prefix = ""
         else:
-            abbr = pieceName[0]
+            prefix = pieceName[0]
 
         # TODO: MOVE NAMES FOR PROMOTION
+        suffix = ""
+        if capture:
+            prefix += 'x'
+        if mate:
+            suffix += '#'
+        elif check:
+            suffix += '+'
 
-        # Checks if it's a capture
-        if newSquare.hasPiece():
-            return abbr + 'x' + newSquare.getName()
-        return abbr + newSquare.getName()
+        return prefix + str(newSquare) + suffix
 
 
 class GameInfo(QFrame):

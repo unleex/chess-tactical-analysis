@@ -121,9 +121,12 @@ class ChessGame(QWidget):
                     and self.selectedPiece.canMoveTo(sq)):
                 
                 self.selectedPiece.setSquare(sq)
-
                 old_sq = self.selectedSquare
                 self.nextTurn()
+
+                # Checks if a king is checked and whether it is checkmate
+                # or not.
+                self.check() 
 
                 return {
                     "action": "movePiece",
@@ -150,8 +153,9 @@ class ChessGame(QWidget):
                     and self.selectedPiece.canMoveTo(sq)):
                 self.selectedPiece.setSquare(sq) # Moves the piece to sq
                 old_sq = self.selectedSquare
-
                 self.nextTurn()
+                
+                self.check()
 
                 return {
                     "action": "movePiece",
@@ -179,6 +183,28 @@ class ChessGame(QWidget):
 
             logger.showBoard(self.squares)
 
+    def check(self):
+        """Checks whether a king is checked and whether it is checkmate or not"""
+        if self.wKing.isChecked():
+            print(self.wKing.getMoves())
+            # If king has no moves, check if a piece can block or capture the check
+            if not self.wKing.getMoves():
+                for piece in self.pieces:
+                    if piece.isSameColorAs(self.wKing) and piece.getMoves():
+                        return
+                    
+                # Game over
+                print("Black wins")
+
+        elif self.bKing.isChecked():
+            print("black king checked")
+            if not self.bKing.getMoves():
+                for piece in self.pieces:
+                    if piece.isSameColorAs(self.bKing) and piece.getMoves():
+                        return
+                
+                # Game over
+                print("White wins")
 
     def createMoveName(self, oldSquare: Square, newSquare: Square):
         """Creates a move name (eg. Nf3) from looking at a pieces'

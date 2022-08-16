@@ -78,8 +78,10 @@ class Piece():
         Their move generation and ability to pin is all the same, and
         they move in a 'linear' fashion."""
         self.clearTrackedAndControlledSquares()
+        self.uncheckKing()
         if self.pinning is not None:  # If pinning a piece, unpin it
             self.unpinPiece()
+
         coord = self.square.getCoord()
         squares = Board.getSquares()
 
@@ -105,9 +107,13 @@ class Piece():
                     # opposite color, determine if there is an enemy 
                     # piece in front of it that should be pinned.
                     if piece.pieceName == "King" and self.isOppositeColorAs(piece):
+                        print('found king on ' + str(sq))
                         if (len(piecesOnRankOrFile) == 1
                                 and (self.isOppositeColorAs(piecesOnRankOrFile[0]))):
                             self.pinPiece(piecesOnRankOrFile[0], d, sq)
+                        elif len(piecesOnRankOrFile) == 0:
+                            print('checking king')
+                            self.checkKing(piece, d)
                         
                     # Track pieces on the rank or file. Used to
                     # determine if a piece should be pinned if a
@@ -129,6 +135,31 @@ class Piece():
 
         if not init:
             logger.pieceUpdatedSquares(self)
+
+    def checkKing(self, kingPiece, dirOfCheck):
+        """Checks the king"""
+        squares = Board.getSquares()
+        coord = self.square.getCoord()
+        kingSquare = kingPiece.square
+        checkingSquares = [self.square]
+
+        for i in range(8):
+            sq_coord = coord[0] + dirOfCheck[0]*i, coord[1] + dirOfCheck[1]*i
+            if sq_coord == kingSquare.getCoord():
+                break
+            checkingSquares.append(squares[sq_coord[0]][sq_coord[1]])
+
+        kingPiece.check(checkingSquares)
+
+    def uncheckKing(self):
+        """If the piece's king was in check pending the piece's move,
+        remove the king from check since the move would remove them
+        from check."""
+        # checkingSquares would be an empty list if the king was
+        # not in check
+        if (self.isWhite and King.whiteCheckingSquares
+                or (not self.isWhite) and King.blackCheckingSquares):
+            King.checkedKing.uncheck()
 
     def clearTrackedAndControlledSquares(self):
         """Goes through a squares' trackedSquares list and removes the piece
@@ -199,8 +230,15 @@ class Piece():
         return self.name
 
     def getMoves(self, nameOnly=False):
-        if self.pinnedTo:
-            moves = set(self.pinnedTo).intersection(set(self.moves))
+        if type(self) != King:
+            if self.pinnedTo:
+                moves = set(self.pinnedTo).intersection(set(self.moves))
+            elif King.whiteCheckingSquares and self.isWhite:
+                moves = set(King.whiteCheckingSquares).intersection(set(self.moves))
+            elif King.blackCheckingSquares and (not self.isWhite):
+                moves = set(King.blackCheckingSquares).intersection(set(self.moves))
+            else:
+                moves = self.moves
         else:
             moves = self.moves
 
@@ -222,12 +260,40 @@ class King(Piece):
     w_id = 0
     b_id = 0
     pieceName = "King"
+
+    # If the white or black king are checked, the checking squares the
+    # direction in which a king is being checked.
+    whiteCheckingSquares = []
+    blackCheckingSquares = []
+    checkedKing = None
     
     def __init__(self, isWhite, square):
         super().__init__(isWhite, square)
+        self.checked = False
+
+    def isChecked(self):
+        return self.checked
+
+    def check(self, checkingSquares):
+        """Called by an enemy piece when they check this king."""
+        self.checked = True
+        King.checkedKing = self
+        if self.isWhite:
+            King.whiteCheckingSquares = checkingSquares
+        else:
+            King.blackCheckingSquares = checkingSquares
+
+    def uncheck(self):
+        self.checked = False
+        King.checkedKing = None
+        if self.isWhite:
+            King.whiteCheckingSquares = None
+        else:
+            King.blackCheckingSquares = None
 
     def updateSquares(self, init=False):
         self.clearTrackedAndControlledSquares()
+
         coord = self.square.getCoord()
         squares = Board.getSquares()
 
@@ -290,6 +356,7 @@ class Pawn(Piece):
         """Gets the squares this pawn can move to and updates the state
         of any squares that this pawn affects."""
         self.clearTrackedAndControlledSquares()
+        self.uncheckKing()
         coord = self.square.getCoord()
         squares = Board.getSquares()
 
@@ -420,6 +487,7 @@ class Knight(Piece):
 
     def updateSquares(self, init=False):
         self.clearTrackedAndControlledSquares()
+        self.uncheckKing()
         coord = self.square.getCoord()
         squares = Board.getSquares()
 

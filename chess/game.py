@@ -186,7 +186,6 @@ class ChessGame(QWidget):
     def check(self):
         """Checks whether a king is checked and whether it is checkmate or not"""
         if self.wKing.isChecked():
-            print(self.wKing.getMoves())
             # If king has no moves, check if a piece can block or capture the check
             if not self.wKing.getMoves():
                 for piece in self.pieces:
@@ -197,7 +196,6 @@ class ChessGame(QWidget):
                 print("Black wins")
 
         elif self.bKing.isChecked():
-            print("black king checked")
             if not self.bKing.getMoves():
                 for piece in self.pieces:
                     if piece.isSameColorAs(self.bKing) and piece.getMoves():
@@ -293,10 +291,10 @@ class Square:
 
     def setPiece(self, piece, init=False):
         """Sets a piece to this square. If there was already a piece,
-        it is captured and their clearTrackedAndControlledSquares()
-        method is called."""
-        if self.piece is not None:
-            self.piece.clearTrackedAndControlledSquares()
+        and the piece param is not None, the piece on this square is 
+        captured and their getCaptured() method is called."""
+        if (self.piece is not None) and (piece is not None):
+            self.piece.getCaptured()
         
         self.piece = piece
         # Don't update squares when initializing the pieces on their

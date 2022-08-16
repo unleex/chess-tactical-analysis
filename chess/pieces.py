@@ -34,10 +34,17 @@ class Piece():
         self.nonMovesControlledSquares = []
         self.pinning = None
         self.pinnedTo = []
+        self.captured = False
 
         # Adds itself to a square, which starts things off
         self.square = square
         self.square.setPiece(self, init=True)
+
+    def getCaptured(self):
+        """Sets this piece's captured attribute to True. Means that this
+        piece no longer exists on the board."""
+        self.clearTrackedAndControlledSquares()
+        self.captured = True
 
     def addTrackedSquare(self, square):
         self.trackedSquares.append(square)
@@ -54,6 +61,7 @@ class Piece():
         self.clearTrackedAndControlledSquares()
         old_square = self.square  # save old square
         old_square.setPiece(None)  # remove itself from old square
+        self.square = square  # update square
         
         # Get all pieces that could be affected by the move
         oldSquareTrackers = set(old_square.getTrackingPieces())
@@ -63,8 +71,8 @@ class Piece():
         # Move piece to new square and update it
         # Must be moved after the trackers have been obtained but before
         # they are updated, so as to avoid common edge cases.
-        self.square = square  # update square
-        self.square.setPiece(self)        
+        self.square.setPiece(self)
+        self.uncheckKing()
         
         # Update the pieces affected by the move
         logger.pieceMoved(self, piecesToUpdate)  # Marks the start
@@ -83,8 +91,10 @@ class Piece():
         """updateSquares() implementation for Bishops, Rooks and Queens.
         Their move generation and ability to pin is all the same, and
         they move in a 'linear' fashion."""
+        if self.captured:
+            return
+
         self.clearTrackedAndControlledSquares()
-        self.uncheckKing()
         if self.pinning is not None:  # If pinning a piece, unpin it
             self.unpinPiece()
 
@@ -113,12 +123,10 @@ class Piece():
                     # opposite color, determine if there is an enemy 
                     # piece in front of it that should be pinned.
                     if piece.pieceName == "King" and self.isOppositeColorAs(piece):
-                        print('found king on ' + str(sq))
                         if (len(piecesOnRankOrFile) == 1
                                 and (self.isOppositeColorAs(piecesOnRankOrFile[0]))):
                             self.pinPiece(piecesOnRankOrFile[0], d, sq)
                         elif len(piecesOnRankOrFile) == 0:
-                            print('checking king')
                             self.checkKing(piece, d)
                         
                     # Track pieces on the rank or file. Used to
@@ -361,8 +369,10 @@ class Pawn(Piece):
     def updateSquares(self, init=False):
         """Gets the squares this pawn can move to and updates the state
         of any squares that this pawn affects."""
+        if self.captured:
+            return
+        
         self.clearTrackedAndControlledSquares()
-        self.uncheckKing()
         coord = self.square.getCoord()
         squares = Board.getSquares()
 
@@ -492,8 +502,10 @@ class Knight(Piece):
         super().__init__(isWhite, square)
 
     def updateSquares(self, init=False):
+        if self.captured:
+            return
+
         self.clearTrackedAndControlledSquares()
-        self.uncheckKing()
         coord = self.square.getCoord()
         squares = Board.getSquares()
 

@@ -56,19 +56,22 @@ class Piece():
         old_square.setPiece(None)  # remove itself from old square
         
         # Get all pieces that could be affected by the move
-        # and update them
         oldSquareTrackers = set(old_square.getTrackingPieces())
         newSquareTrackers = set(self.square.getTrackingPieces())
         piecesToUpdate = oldSquareTrackers.union(newSquareTrackers)
 
+        # Move piece to new square and update it
+        # Must be moved after the trackers have been obtained but before
+        # they are updated, so as to avoid common edge cases.
+        self.square = square  # update square
+        self.square.setPiece(self)        
+        
+        # Update the pieces affected by the move
         logger.pieceMoved(self, piecesToUpdate)  # Marks the start
         for piece in piecesToUpdate:
             piece.updateSquares()
         logger.pieceMoved(self)  # Marks the end of the updates
 
-        # Move piece to new square and update it
-        self.square = square  # update square
-        self.square.setPiece(self)        
 
     def updateSquares(self, init=False):
         """This function should be reimplemented to update the squares of

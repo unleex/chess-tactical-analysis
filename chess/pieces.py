@@ -50,22 +50,25 @@ class Piece():
     def setSquare(self, square):
         """Sets a square to this piece. Called when this piece moves to
         another square"""
+        # Clear tracked squares so piece won't appear on newSquareTrackers
+        self.clearTrackedAndControlledSquares()
         old_square = self.square  # save old square
         old_square.setPiece(None)  # remove itself from old square
-
-        self.square = square  # update square
-        self.square.setPiece(self)
         
         # Get all pieces that could be affected by the move
+        # and update them
         oldSquareTrackers = set(old_square.getTrackingPieces())
         newSquareTrackers = set(self.square.getTrackingPieces())
-
         piecesToUpdate = oldSquareTrackers.union(newSquareTrackers)
 
         logger.pieceMoved(self, piecesToUpdate)  # Marks the start
         for piece in piecesToUpdate:
             piece.updateSquares()
         logger.pieceMoved(self)  # Marks the end of the updates
+
+        # Move piece to new square and update it
+        self.square = square  # update square
+        self.square.setPiece(self)        
 
     def updateSquares(self, init=False):
         """This function should be reimplemented to update the squares of

@@ -1,19 +1,7 @@
 """This module defines classes for every type of chess piece"""
 import logger
-
-class Board:
-    """Provides an easy way for a Piece to access the board state of a game
-    by getting the squares. Centralizes access so that 16 Piece objects do
-    not each have to hold a reference to squares."""
-    SQUARES = None
-
-    @classmethod
-    def setSquares(cls, squares):
-        cls.SQUARES = squares
-
-    @classmethod
-    def getSquares(cls):
-        return cls.SQUARES
+from squares import Squares
+from special_moves import Castle
 
 
 class Piece():
@@ -99,7 +87,7 @@ class Piece():
             self.unpinPiece()
 
         coord = self.square.getCoord()
-        squares = Board.getSquares()
+        squares = Squares.getSquares()
 
         for d in self.directions:
             canAddToMoves = True
@@ -152,7 +140,7 @@ class Piece():
 
     def checkKing(self, kingPiece, dirOfCheck):
         """Checks the king"""
-        squares = Board.getSquares()
+        squares = Squares.getSquares()
         coord = self.square.getCoord()
         kingSquare = kingPiece.square
         checkingSquares = [self.square]
@@ -192,14 +180,20 @@ class Piece():
         self.moves.clear()
         self.nonMovesControlledSquares.clear()
 
-    def addMove(self, square):
+    def addMove(self, square, castle = False):
         """Adds square to moves list and adds the piece to the squares's
         controlledBy list."""
+        # only for the kings
+        if castle:
+            self.castleMoves.clear()
+            self.castleMoves.extend(square) # might be able to castle both sides
+            return
+
         self.moves.append(square)
         square.addControllingPiece(self)
 
     def pinPiece(self, piece, direction, kingSquare):
-        squares = Board.getSquares()
+        squares = Squares.getSquares()
         coord = self.square.getCoord()
         allowedSquares = [self.square]
 
@@ -254,7 +248,8 @@ class Piece():
             else:
                 moves = self.moves
         else:
-            moves = self.moves
+            moves = self.moves.copy()
+            moves.extend(self.castleMoves)
 
         if nameOnly:
             # Square.__str__ simply returns the name of a square
@@ -284,6 +279,14 @@ class King(Piece):
     def __init__(self, isWhite, square):
         super().__init__(isWhite, square)
         self.checked = False
+        self.moved = False
+        self.castleMoves = []
+        if self.isWhite:
+            self.kingsideCastleSquare = "g1"
+            self.queensideCastleSquare = "c1"
+        else:
+            self.kingsideCastleSquare = "g8"
+            self.queensideCastleSquare = "c8"
 
     def isChecked(self):
         return self.checked
@@ -305,11 +308,34 @@ class King(Piece):
         else:
             King.blackCheckingSquares = None
 
+    def setSquare(self, square):
+        super().setSquare(square)
+        if not self.moved:
+            if self.isWhite:
+                if str(square) == self.kingsideCastleSquare:
+                    Castle.wRook1.setSquare(Squares.getSquares()[5][0])
+                    return "castle", Castle.wRook1Move
+                elif str(square) == self.queensideCastleSquare:
+                    Castle.wRook0.setSquare(Squares.getSquares()[2][0])
+                    return "castle", Castle.wRook0Move
+            else:
+                if str(square) == self.kingsideCastleSquare:
+                    Castle.bRook1.setSquare(Squares.getSquares()[5][7])
+                    return "castle", Castle.bRook1Move
+                elif str(square) == self.queensideCastleSquare:
+                    Castle.bRook0.setSquare(Squares.getSquares()[2][7])
+                    return "castle", Castle.bRook0Move
+
+        return "normal",
+
+
     def updateSquares(self, init=False):
         self.clearTrackedAndControlledSquares()
+        if not self.moved:
+            self.addMove(Castle.canCastle(self), castle=True)
 
         coord = self.square.getCoord()
-        squares = Board.getSquares()
+        squares = Squares.getSquares()
 
         directions = (
             (1,0), (0, 1), (-1, 0), (0, -1),
@@ -374,7 +400,7 @@ class Pawn(Piece):
         
         self.clearTrackedAndControlledSquares()
         coord = self.square.getCoord()
-        squares = Board.getSquares()
+        squares = Squares.getSquares()
 
         self.updateMoves()
 
@@ -414,7 +440,7 @@ class Pawn(Piece):
     def updateMoves(self):
         """Updates the possible squares this pawn can move to"""
         coord = self.square.getCoord()
-        squares = Board.getSquares()
+        squares = Squares.getSquares()
 
         if self.isWhite:
             sq = squares[coord[0]][coord[1]+1]
@@ -463,9 +489,17 @@ class Rook(Piece):
 
     def __init__(self, isWhite, square):
         super().__init__(isWhite, square)
+        # Add rook to Castle class to allow king to determine when it
+        # can castle.
+        if self.name[0:-1] == "wRook":
+            Castle.setWhiteRook(self)
+        elif self.name[0:-1] == "bRook":
+            Castle.setBlackRook(self)
+        
         self.directions = (
             (1, 0), (0, -1), (-1, 0), (0, 1)
         )
+        self.moved = False
 
     def updateSquares(self, init=False):
         super().linearUpdateSquares(init)
@@ -474,7 +508,7 @@ class Rook(Piece):
         """Pins piece and gives the piece its allowed squares"""
         # NOT TESTED
         coord = self.square.getCoord()
-        squares = Board.getSquares()
+        squares = Squares.getSquares()
 
         pieceCoord = piece.square.getCoord()
         allowedSquares = []
@@ -507,7 +541,7 @@ class Knight(Piece):
 
         self.clearTrackedAndControlledSquares()
         coord = self.square.getCoord()
-        squares = Board.getSquares()
+        squares = Squares.getSquares()
 
         direction = (
             (1, 2), (2, 1), (2, -1), (1, -2),

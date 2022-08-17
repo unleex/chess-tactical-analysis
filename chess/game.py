@@ -1,10 +1,10 @@
-from sys import prefix
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QFrame, QLabel,
                                QGridLayout, QVBoxLayout)
 from PySide6.QtCore import Qt
-from board import BoardView, Square 
+from board import BoardView, Square
 from interface import BoardToGameInterface
 from pieces import *
+from squares import Squares
 import logger
 
 class ChessGame(QWidget):
@@ -28,8 +28,8 @@ class ChessGame(QWidget):
 
         # Make a board state
         self.squares = [[], [], [], [], [], [], [], []]
+        Squares.setSquares(self.squares)
         self.pieces = []
-        Board.setSquares(self.squares)  # So that pieces have access to squares
         self.initializeBoardState()
 
         self.layout = QHBoxLayout()
@@ -109,7 +109,7 @@ class ChessGame(QWidget):
         return sqName
 
     def squareClicked(self, squareName):
-        """"""
+        """""" 
         coord = self.squareNameToCoord(squareName)
         sq = self.squares[coord[0]][coord[1]]
         piece = sq.getPiece()

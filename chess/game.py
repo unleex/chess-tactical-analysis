@@ -1,9 +1,11 @@
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QFrame, QLabel,
                                QGridLayout, QVBoxLayout)
 from PySide6.QtCore import Qt
-from board import BoardView, Square 
+from board import BoardView, Square
 from interface import BoardToGameInterface
 from pieces import *
+from squares import Squares
+from special_moves import Castle
 import logger
 
 class ChessGame(QWidget):
@@ -27,8 +29,8 @@ class ChessGame(QWidget):
 
         # Make a board state
         self.squares = [[], [], [], [], [], [], [], []]
+        Squares.setSquares(self.squares)
         self.pieces = []
-        Board.setSquares(self.squares)  # So that pieces have access to squares
         self.initializeBoardState()
 
         self.layout = QHBoxLayout()
@@ -108,13 +110,42 @@ class ChessGame(QWidget):
         return sqName
 
     def squareClicked(self, squareName):
-        """"""
+        """""" 
         coord = self.squareNameToCoord(squareName)
         sq = self.squares[coord[0]][coord[1]]
+        piece = sq.getPiece()
 
         if sq.hasPiece():
-            # If there is a piece on the clicked square, select the piece
-            # and visually highlight where it can go.
+            # If there is a selected piece, and this square has an enemy piece,
+            # check if it can move to this square and capture.
+            if (self.selectedPiece is not None
+                    and self.selectedPiece.isOppositeColorAs(piece)
+                    and self.selectedPiece.canMoveTo(sq)):
+                
+                self.selectedPiece.setSquare(sq)
+                old_sq = self.selectedSquare
+                turn = self.whiteTurn
+                self.nextTurn()
+                # Checks if a king is checked and whether it is checkmate
+                # or not.
+                checked = self.check()
+                self.gameInfo.moveList.addMove(
+                    self.createMoveName(old_sq, sq, capture=True, **checked),
+                    turn
+                )
+
+                return {
+                    "action": "movePiece",
+                    "squares": [str(old_sq), str(sq)]
+                }
+
+            # If there is a piece on the clicked square, check if it is
+            # its color's turn. If so, select the piece and visually
+            # highlight where it can go. If not, unhighlight any
+            # highlighted squares, if any.
+            if sq.getPiece().isWhite is not self.whiteTurn:
+                return {"action": "unhighlightSquares"}
+                
             self.selectedPiece = sq.getPiece()
             self.selectedSquare = sq
             return {
@@ -126,51 +157,114 @@ class ChessGame(QWidget):
             # that can move to the square.
             if (self.selectedPiece is not None 
                     and self.selectedPiece.canMoveTo(sq)):
-                self.selectedPiece.setSquare(sq) # Moves the piece to sq
+                moveType = self.selectedPiece.setSquare(sq) # Moves the piece to sq
+                old_sq = self.selectedSquare
+                turn = self.whiteTurn  # save turn for MoveList.addMove
+                self.nextTurn()
                 
-                # After every turn, one of the kings will have their squares
-                # updated, as they could be restricted at any time and their
-                # trackedSquares list is not enough.
-                if self.whiteTurn:
-                    self.bKing.updateSquares()
-                else:
-                    self.wKing.updateSquares()
+                checked = self.check()
 
-                old_sq = self.selectedSquare  # Save the square the piece used to be on
-                self.selectedPiece = None
-                self.selectedSquare = None
+                if moveType[0] == "normal":
+                    self.gameInfo.moveList.addMove(
+                        self.createMoveName(old_sq, sq, capture=False, **checked),
+                        turn
+                    )
+                    return {
+                        "action": "movePiece",
+                        "squares": [str(old_sq), str(sq)]
+                    }
 
-                self.whiteTurn = True if self.whiteTurn is False else False  # switch turns
+                elif moveType[0] == "castle":
+                    self.gameInfo.moveList.addMove(
+                        self.createMoveName(old_sq, sq, capture=False, castle=moveType[1]),
+                        turn
+                    )
+                    return {
+                        "action": "castle",
+                        "kingMove": [str(old_sq), str(sq)],
+                        "rookMove": moveType[1]
+                    }
+            else:
+                # This can run if there is no selected piece or the
+                # selected piece cannot move to the selected square.
+                # Just unhighlight any highlighted squares, if any.
+                return {"action": "unhighlightSquares"}
 
-                logger.showBoard(self.squares)
+    def nextTurn(self):
+            # After every turn, one of the kings will have their squares
+            # updated, as they could be restricted at any time and their
+            # trackedSquares list is not enough to keep up.
+            if self.whiteTurn:
+                self.bKing.updateSquares()
+            else:
+                self.wKing.updateSquares()
 
-                return {
-                    "action": "movePiece",
-                    "squares": [str(old_sq), str(sq)]
-                }
+            self.selectedPiece = None
+            self.selectedSquare = None
 
+            self.whiteTurn = True if self.whiteTurn is False else False  # switch turns
 
+            logger.showBoard(self.squares)
+
+    def check(self):
+        """Checks whether a king is checked and whether it is checkmate or not"""
+        noCheck = {"check": False, "mate": False}
+        checkNoMate = {"check": True, "mate": False}
+        checkmate = {"check": True, "mate": True}
+
+        if self.wKing.isChecked():
+            # If king has no moves, check if a piece can block or capture the check
+            if not self.wKing.getMoves():
+                for piece in self.pieces:
+                    if piece.isSameColorAs(self.wKing) and piece.getMoves():
+                        return checkNoMate
+                # Game over
+                print("Black wins")
+                return checkmate
+            return checkNoMate
+
+        elif self.bKing.isChecked():
+            if not self.bKing.getMoves():
+                for piece in self.pieces:
+                    if piece.isSameColorAs(self.bKing) and piece.getMoves():
+                        return checkNoMate
+                
+                # Game over
+                print("White wins")
+                return checkmate
+            return checkNoMate
         
-        return {}
+        return noCheck
 
-    def createMoveName(self, oldSquare: Square, newSquare: Square):
+    def createMoveName(self, oldSquare, newSquare, capture = False, check = False,
+                       mate = False, castle = None):
         """Creates a move name (eg. Nf3) from looking at a pieces'
         current square (oldSquare) and the square it's going to move
         to (newSquare)"""
+        if castle:
+            return Castle.getMoveName(castle)
+
+        pieceName = newSquare.getPiece().pieceName
         # Abbreviation for knight in moves is N, as the King takes K
-        if (pieceName := oldSquare.getPiece()[1:]) == "Knight":
-            abbr = "N"
+        if (pieceName) == "Knight":
+            prefix = "N"
+        elif pieceName == "Pawn" and capture:
+            prefix = str(oldSquare)[0]
         elif pieceName == "Pawn":
-            abbr = ""
+            prefix = ""
         else:
-            abbr = pieceName[0]
+            prefix = pieceName[0]
 
         # TODO: MOVE NAMES FOR PROMOTION
+        suffix = ""
+        if capture:
+            prefix += 'x'
+        if mate:
+            suffix += '#'
+        elif check:
+            suffix += '+'
 
-        # Checks if it's a capture
-        if newSquare.hasPiece():
-            return abbr + 'x' + newSquare.getName()
-        return abbr + newSquare.getName()
+        return prefix + str(newSquare) + suffix
 
 
 class GameInfo(QFrame):
@@ -239,8 +333,13 @@ class Square:
         self.coord = coord
 
     def setPiece(self, piece, init=False):
+        """Sets a piece to this square. If there was already a piece,
+        and the piece param is not None, the piece on this square is 
+        captured and their getCaptured() method is called."""
+        if (self.piece is not None) and (piece is not None):
+            self.piece.getCaptured()
+        
         self.piece = piece
-
         # Don't update squares when initializing the pieces on their
         # initial positions
         if (not init) and (piece is not None):

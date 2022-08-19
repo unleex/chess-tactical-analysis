@@ -173,7 +173,10 @@ class Square(QGraphicsRectItem):
         elif action == "movePiece":
             self.scene().movePiece(result["squares"])
         elif action == "unhighlightSquares":
-            self.scene().unhighlightSquares() 
+            self.scene().unhighlightSquares()
+        elif action == "castle":
+            self.scene().movePiece(result["kingMove"])
+            self.scene().movePiece(result["rookMove"])
 
         return super().mousePressEvent(event)
 

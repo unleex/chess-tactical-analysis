@@ -5,6 +5,7 @@ from board import BoardView, Square
 from interface import BoardToGameInterface
 from pieces import *
 from squares import Squares
+from special_moves import Castle
 import logger
 
 class ChessGame(QWidget):
@@ -156,22 +157,33 @@ class ChessGame(QWidget):
             # that can move to the square.
             if (self.selectedPiece is not None 
                     and self.selectedPiece.canMoveTo(sq)):
-                self.selectedPiece.setSquare(sq) # Moves the piece to sq
+                moveType = self.selectedPiece.setSquare(sq) # Moves the piece to sq
                 old_sq = self.selectedSquare
                 turn = self.whiteTurn  # save turn for MoveList.addMove
                 self.nextTurn()
                 
                 checked = self.check()
 
-                self.gameInfo.moveList.addMove(
-                    self.createMoveName(old_sq, sq, capture=False, **checked),
-                    turn
-                )
+                if moveType[0] == "normal":
+                    self.gameInfo.moveList.addMove(
+                        self.createMoveName(old_sq, sq, capture=False, **checked),
+                        turn
+                    )
+                    return {
+                        "action": "movePiece",
+                        "squares": [str(old_sq), str(sq)]
+                    }
 
-                return {
-                    "action": "movePiece",
-                    "squares": [str(old_sq), str(sq)]
-                }
+                elif moveType[0] == "castle":
+                    self.gameInfo.moveList.addMove(
+                        self.createMoveName(old_sq, sq, capture=False, castle=moveType[1]),
+                        turn
+                    )
+                    return {
+                        "action": "castle",
+                        "kingMove": [str(old_sq), str(sq)],
+                        "rookMove": moveType[1]
+                    }
             else:
                 # This can run if there is no selected piece or the
                 # selected piece cannot move to the selected square.
@@ -225,10 +237,13 @@ class ChessGame(QWidget):
         return noCheck
 
     def createMoveName(self, oldSquare, newSquare, capture = False, check = False,
-                       mate = False):
+                       mate = False, castle = None):
         """Creates a move name (eg. Nf3) from looking at a pieces'
         current square (oldSquare) and the square it's going to move
         to (newSquare)"""
+        if castle:
+            return Castle.getMoveName(castle)
+
         pieceName = newSquare.getPiece().pieceName
         # Abbreviation for knight in moves is N, as the King takes K
         if (pieceName) == "Knight":

@@ -29,6 +29,13 @@ class Castle:
             cls.bRook1 = bRook
 
     @classmethod
+    def getMoveName(cls, move):
+        if move == cls.wRook0Move or move == cls.bRook0Move:
+            return "O-O-O"
+        else:
+            return "O-O"
+
+    @classmethod
     def canCastle(cls, king):
         moves = []
 

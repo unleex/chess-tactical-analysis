@@ -68,6 +68,8 @@ class Piece():
             piece.updateSquares()
         logger.pieceMoved(self)  # Marks the end of the updates
 
+        return "normal",
+
 
     def updateSquares(self, init=False):
         """This function should be reimplemented to update the squares of
@@ -310,7 +312,9 @@ class King(Piece):
 
     def setSquare(self, square):
         super().setSquare(square)
-        if not self.moved:
+        moved_ = self.moved
+        self.moved = True
+        if not moved_:
             if self.isWhite:
                 if str(square) == self.kingsideCastleSquare:
                     Castle.wRook1.setSquare(Squares.getSquares()[5][0])
@@ -365,6 +369,10 @@ class King(Piece):
                 
         
         super().updateSquares(init=init)
+
+    def canMoveTo(self, square):
+        moves = set(self.moves).union(set(self.castleMoves))
+        return square in moves
 
 
 class Queen(Piece):
@@ -525,6 +533,10 @@ class Rook(Piece):
         
         self.pinning.append(piece)
         piece.setPinningPiece(self, allowedSquares)
+
+    def setSquare(self, square):
+        self.moved = True
+        return super().setSquare(square)
 
 
 class Knight(Piece):

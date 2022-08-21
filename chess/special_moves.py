@@ -46,7 +46,7 @@ class Castle:
             if not cls.wRook0.moved:  # If rook hasn't moved
                 for i in range(1, 4):
                     sq = squares[kingCoord[0]-i][kingCoord[1]]
-                    if sq.hasPiece():
+                    if sq.hasPiece() or (not king.canMoveTo(sq)):
                         break
                 else:
                     moves.append(squares[2][0])  # square on 'c1'
@@ -55,7 +55,7 @@ class Castle:
             if not cls.wRook1.moved:  # If rook hasn't moved
                 for i in range(1, 3):
                     sq = squares[kingCoord[0]+i][kingCoord[1]]
-                    if sq.hasPiece():
+                    if sq.hasPiece() or (not king.canMoveTo(sq)):
                         break
                 else:
                     moves.append(squares[6][0])  # square on 'g1'
@@ -65,7 +65,7 @@ class Castle:
             if not cls.bRook0.moved:  # If rook hasn't moved
                 for i in range(1, 4):
                     sq = squares[kingCoord[0]-i][kingCoord[1]]
-                    if sq.hasPiece():
+                    if sq.hasPiece() or (not king.canMoveTo(sq)):
                         break
                 else:
                     moves.append(squares[2][7])  # square on 'c8'
@@ -74,7 +74,7 @@ class Castle:
             if not cls.bRook1.moved:  # If rook hasn't moved
                 for i in range(1, 3):
                     sq = squares[kingCoord[0]+i][kingCoord[1]]
-                    if sq.hasPiece():
+                    if sq.hasPiece() or (not king.canMoveTo(sq)):
                         break
                 else:
                     moves.append(squares[6][7])  # square on 'g8'

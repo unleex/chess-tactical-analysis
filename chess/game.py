@@ -122,9 +122,10 @@ class ChessGame(QWidget):
                     and self.selectedPiece.isOppositeColorAs(piece)
                     and self.selectedPiece.canMoveTo(sq)):
                 
-                self.selectedPiece.setSquare(sq)
+                moveType = self.selectedPiece.setSquare(sq)
                 old_sq = self.selectedSquare
                 turn = self.whiteTurn
+                
                 self.nextTurn()
                 # Checks if a king is checked and whether it is checkmate
                 # or not.
@@ -159,7 +160,14 @@ class ChessGame(QWidget):
                     and self.selectedPiece.canMoveTo(sq)):
                 moveType = self.selectedPiece.setSquare(sq) # Moves the piece to sq
                 old_sq = self.selectedSquare
-                turn = self.whiteTurn  # save turn for MoveList.addMove
+                turn = self.whiteTurn
+                
+                if moveType == "promotion":
+                    return {
+                        "action": "showPromotionDialog",
+                        "state": (old_sq, sq, turn)
+                    }
+                
                 self.nextTurn()
                 
                 checked = self.check()

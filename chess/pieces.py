@@ -488,6 +488,11 @@ class Pawn(Piece):
         # adjacent squares. This function enables them to move there, but
         # the square is already 'controlled'.
         self.moves.append(square)
+
+    def setSquare(self, square):
+        if square.getCoord()[1] == 0 or square.getCoord()[1] == 7:
+            return "promotion"
+        return super().setSquare(square)
     
 
 class Rook(Piece):

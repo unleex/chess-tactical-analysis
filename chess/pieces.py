@@ -380,12 +380,14 @@ class Queen(Piece):
     b_id = 0
     pieceName = "Queen"
     
-    def __init__(self, isWhite, square):
+    def __init__(self, isWhite, square, promotion = False):
         super().__init__(isWhite, square)
         self.directions = (
             (1, 0), (0, -1), (-1, 0), (0, 1),
             (1, 1), (1, -1), (-1, -1), (-1, 1)
         )
+        if promotion:
+            self.updateSquares()
 
     def updateSquares(self, init=False):
         super().linearUpdateSquares(init)
@@ -491,6 +493,14 @@ class Pawn(Piece):
 
     def setSquare(self, square):
         if square.getCoord()[1] == 0 or square.getCoord()[1] == 7:
+            self.clearTrackedAndControlledSquares()
+            # Get pieces that tracked the square the pawn was on
+            # and update them because the pawn is no longer there.
+            trackingPieces = self.square.getTrackingPieces()
+            self.square.setPiece(None)
+            for piece in trackingPieces:
+                piece.updateSquares()
+            
             return "promotion"
         return super().setSquare(square)
     
@@ -500,7 +510,7 @@ class Rook(Piece):
     b_id = 0
     pieceName = "Rook"
 
-    def __init__(self, isWhite, square):
+    def __init__(self, isWhite, square, promotion = False):
         super().__init__(isWhite, square)
         # Add rook to Castle class to allow king to determine when it
         # can castle.
@@ -513,6 +523,8 @@ class Rook(Piece):
             (1, 0), (0, -1), (-1, 0), (0, 1)
         )
         self.moved = False
+        if promotion:
+            self.updateSquares()
 
     def updateSquares(self, init=False):
         super().linearUpdateSquares(init)
@@ -549,8 +561,10 @@ class Knight(Piece):
     b_id = 0
     pieceName = "Knight"  
     
-    def __init__(self, isWhite, square):
+    def __init__(self, isWhite, square, promotion = False):
         super().__init__(isWhite, square)
+        if promotion:
+            self.updateSquares()
 
     def updateSquares(self, init=False):
         if self.captured:
@@ -585,11 +599,13 @@ class Bishop(Piece):
     b_id = 0
     pieceName = "Bishop"
     
-    def __init__(self, isWhite, square):
+    def __init__(self, isWhite, square, promotion = False):
         super().__init__(isWhite, square)
         self.directions = (
             (1, 1), (1, -1), (-1, -1), (-1, 1)
         )
+        if promotion:
+            self.updateSquares()
 
     def updateSquares(self, init=False):
         super().linearUpdateSquares(init)

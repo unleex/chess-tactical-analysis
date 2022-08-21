@@ -171,6 +171,8 @@ class BoardScene(QGraphicsScene):
         from_sq.movePieceTo(to_sq, promotingTo=promoteTo)
         self.unhighlightSquares()
 
+        BoardToGameInterface.pawnPromoted(promoteTo)
+
     def printSquares(self):
         """Prints all the squares and the pieces on each square.
         Used for debugging."""
@@ -243,7 +245,7 @@ class Square(QGraphicsRectItem):
         if promotingTo is not None:
             self.scene().removeItem(pixmap)  # remove pawn
 
-            newPixmap = self.scene().addPixmap(QPixmap(f":pieces\\{promotingTo[0:-1]}"))
+            newPixmap = self.scene().addPixmap(QPixmap(f":pieces\\{promotingTo}"))
             square_to.setPiece(promotingTo, newPixmap)
             return
 

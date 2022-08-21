@@ -109,6 +109,45 @@ class ChessGame(QWidget):
         sqName = letters[coord[0]] + str(coord[1] + 1)
         return sqName
 
+    def pawnPromoted(self, promotedTo):
+        """When user selects a piece for the promoting pawn to promote
+        to."""
+        if promotedTo[0] == "w":
+            isWhite = True
+        else:
+            isWhite = False
+        
+        if promotedTo[1:] == "Queen":
+            newPiece = Queen(
+                isWhite=isWhite, square=self.promotionSquares[1], promotion=True
+            )
+        elif promotedTo[1:] == "Rook":
+            newPiece = Rook(
+                isWhite=isWhite, square=self.promotionSquares[1], promotion=True
+            )
+        elif promotedTo[1:] == "Knight":
+            newPiece = Knight(
+                isWhite=isWhite, square=self.promotionSquares[1], promotion=True
+            )
+        elif promotedTo[1:] == "Bishop":
+            newPiece = Bishop(
+                isWhite=isWhite, square=self.promotionSquares[1], promotion=True
+            )
+
+        turn = self.whiteTurn
+        self.nextTurn()
+        # Checks if a king is checked and whether it is checkmate
+        # or not.
+        checked = self.check()
+        self.gameInfo.moveList.addMove(
+            self.createMoveName(
+                self.promotionSquares[0], self.promotionSquares[1], 
+                promotingTo=promotedTo, **checked
+            ),
+            turn
+        )
+
+
     def squareClicked(self, squareName):
         """""" 
         coord = self.squareNameToCoord(squareName)
@@ -163,6 +202,7 @@ class ChessGame(QWidget):
                 turn = self.whiteTurn
                 
                 if moveType == "promotion":
+                    self.promotionSquares = (old_sq, sq)
                     return {
                         "action": "showPromotionDialog",
                         "state": (str(old_sq), str(sq), turn)
@@ -245,28 +285,36 @@ class ChessGame(QWidget):
         return noCheck
 
     def createMoveName(self, oldSquare, newSquare, capture = False, check = False,
-                       mate = False, castle = None):
+                       mate = False, castle = None, promotingTo = None):
         """Creates a move name (eg. Nf3) from looking at a pieces'
         current square (oldSquare) and the square it's going to move
         to (newSquare)"""
+
+        def getAbbr(name):
+            # Abbreviation for knight in moves is N, as the King takes K
+            if (name) == "Knight":
+                return "N"
+            elif name == "Pawn" and capture:
+                return str(oldSquare)[0]
+            elif name == "Pawn":
+                return ""
+            else:
+                return name[0]
+
         if castle:
             return Castle.getMoveName(castle)
 
         pieceName = newSquare.getPiece().pieceName
-        # Abbreviation for knight in moves is N, as the King takes K
-        if (pieceName) == "Knight":
-            prefix = "N"
-        elif pieceName == "Pawn" and capture:
-            prefix = str(oldSquare)[0]
-        elif pieceName == "Pawn":
-            prefix = ""
+        if promotingTo is None:
+            prefix = getAbbr(pieceName)
         else:
-            prefix = pieceName[0]
+            prefix = getAbbr("Pawn")
 
-        # TODO: MOVE NAMES FOR PROMOTION
         suffix = ""
         if capture:
             prefix += 'x'
+        if promotingTo is not None:
+            suffix += '=' + getAbbr(promotingTo[1:])
         if mate:
             suffix += '#'
         elif check:
@@ -346,7 +394,7 @@ class Square:
         captured and their getCaptured() method is called."""
         if (self.piece is not None) and (piece is not None):
             self.piece.getCaptured()
-        
+
         self.piece = piece
         # Don't update squares when initializing the pieces on their
         # initial positions

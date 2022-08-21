@@ -94,11 +94,6 @@ class EnPassant:
 
 class Promotion():
 
-    queenId = "3"
-    rookId = "3"
-    knightId = "3"
-    bishopId = "3"
-
     @classmethod
     def getPromotionDialog(cls, isWhite, promoteToFunc):
         dialog = QWidget()
@@ -109,10 +104,10 @@ class Promotion():
         knightButton = QPushButton()
         bishopButton = QPushButton()
 
-        queenButton.clicked.connect(lambda: promoteToFunc("Queen" + cls.queenId))
-        rookButton.clicked.connect(lambda: promoteToFunc("Rook" + cls.rookId))
-        knightButton.clicked.connect(lambda: promoteToFunc("Knight" + cls.knightId))
-        bishopButton.clicked.connect(lambda: promoteToFunc("Bishop" + cls.bishopId))
+        queenButton.clicked.connect(lambda: promoteToFunc("Queen"))
+        rookButton.clicked.connect(lambda: promoteToFunc("Rook"))
+        knightButton.clicked.connect(lambda: promoteToFunc("Knight"))
+        bishopButton.clicked.connect(lambda: promoteToFunc("Bishop"))
 
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         queenButton.setSizePolicy(sizePolicy)

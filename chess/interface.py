@@ -30,3 +30,8 @@ class BoardToGameInterface:
     def squareClicked(cls, squareName):
         """Called when a Square is clicked"""
         return cls.CURRENT_GAME.squareClicked(squareName)
+
+    @classmethod
+    def pawnPromoted(cls, promotedTo):
+        """Called when the user decides what promote"""
+        return cls.CURRENT_GAME.pawnPromoted(promotedTo)

@@ -144,13 +144,32 @@ class BoardScene(QGraphicsScene):
             [0] square pawn moved from, [1] square pawn promoting on,
             [2] color of the pawn"""
         self.promotionDialogShown = True
-        dialog = self.addWidget(Promotion.getPromotionDialog(state[2]))
+        self.promotionDialog = self.addWidget(
+            Promotion.getPromotionDialog(
+                state[2], 
+                lambda promoteTo: self.promotePawn(state, promoteTo)
+            )
+        )
 
         # Centers the dialog in the middle of the board
-        x, y = dialog.boundingRect().size().toTuple()
+        x, y = self.promotionDialog.boundingRect().size().toTuple()
         center = self.sceneRect().center() - QPointF((1/2)*x, (1/2)*y)
-        dialog.setPos(center)
+        self.promotionDialog.setPos(center)
 
+    def promotePawn(self, state, promoteTo):
+        """Promotes a pawn to promoteTo"""
+        self.promotionDialogShown = False
+        self.removeItem(self.promotionDialog)
+
+        old_sq, new_sq, whiteTurn = state
+        from_sq, to_sq = self.squares[old_sq], self.squares[new_sq]
+        if whiteTurn:
+            promoteTo = "w" + promoteTo
+        else:
+            promoteTo = "b" + promoteTo
+
+        from_sq.movePieceTo(to_sq, promotingTo=promoteTo)
+        self.unhighlightSquares()
 
     def printSquares(self):
         """Prints all the squares and the pieces on each square.
@@ -216,10 +235,17 @@ class Square(QGraphicsRectItem):
     def getPiece(self):
         return self.piece
 
-    def movePieceTo(self, square_to):
+    def movePieceTo(self, square_to, promotingTo=None):
         """Moves the piece on this square to another square"""
         piece, pixmap = self.piece, self.piecePixmap
         self.piece = self.piecePixmap = None
+
+        if promotingTo is not None:
+            self.scene().removeItem(pixmap)  # remove pawn
+
+            newPixmap = self.scene().addPixmap(QPixmap(f":pieces\\{promotingTo[0:-1]}"))
+            square_to.setPiece(promotingTo, newPixmap)
+            return
 
         square_to.setPiece(piece, pixmap)
 

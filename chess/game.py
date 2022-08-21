@@ -165,7 +165,7 @@ class ChessGame(QWidget):
                 if moveType == "promotion":
                     return {
                         "action": "showPromotionDialog",
-                        "state": (old_sq, sq, turn)
+                        "state": (str(old_sq), str(sq), turn)
                     }
                 
                 self.nextTurn()

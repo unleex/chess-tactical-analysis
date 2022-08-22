@@ -142,10 +142,13 @@ class ChessGame(QWidget):
         self.gameInfo.moveList.addMove(
             self.createMoveName(
                 self.promotionSquares[0], self.promotionSquares[1], 
-                promotingTo=promotedTo, **checked
+                promotingTo=promotedTo, capture=self.promotionOnCapture,
+                **checked
             ),
             turn
         )
+
+        self.promotionSquares = None
 
 
     def squareClicked(self, squareName):
@@ -164,6 +167,14 @@ class ChessGame(QWidget):
                 moveType = self.selectedPiece.setSquare(sq)
                 old_sq = self.selectedSquare
                 turn = self.whiteTurn
+
+                if moveType == "promotion":
+                    self.promotionSquares = (old_sq, sq)
+                    self.promotionOnCapture = True
+                    return {
+                        "action": "showPromotionDialog",
+                        "state": (str(old_sq), str(sq), turn)
+                    }
                 
                 self.nextTurn()
                 # Checks if a king is checked and whether it is checkmate
@@ -203,6 +214,7 @@ class ChessGame(QWidget):
                 
                 if moveType == "promotion":
                     self.promotionSquares = (old_sq, sq)
+                    self.promotionOnCapture = False
                     return {
                         "action": "showPromotionDialog",
                         "state": (str(old_sq), str(sq), turn)

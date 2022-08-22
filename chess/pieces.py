@@ -528,28 +528,6 @@ class Rook(Piece):
 
     def updateSquares(self, init=False):
         super().linearUpdateSquares(init)
-                    
-    def pinPiece(self, piece, direction):
-        """Pins piece and gives the piece its allowed squares"""
-        # NOT TESTED
-        coord = self.square.getCoord()
-        squares = Squares.getSquares()
-
-        pieceCoord = piece.square.getCoord()
-        allowedSquares = []
-        
-        # Get all the squares the pinned piece has available to it
-        for i in range(8):
-            new_coord = coord[0] + direction[0]*i, coord[1] + direction[1]*i
-            if ((new_coord[0] == pieceCoord[0])
-                    and (new_coord[1] == pieceCoord[1])):
-                break
-
-            sq = squares[new_coord[0]][new_coord[1]]
-            allowedSquares.append(sq)
-        
-        self.pinning.append(piece)
-        piece.setPinningPiece(self, allowedSquares)
 
     def setSquare(self, square):
         self.moved = True

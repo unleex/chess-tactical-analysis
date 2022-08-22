@@ -142,18 +142,19 @@ class Piece():
         if not init:
             logger.pieceUpdatedSquares(self)
 
-    def checkKing(self, kingPiece, dirOfCheck):
+    def checkKing(self, kingPiece, dirOfCheck = None):
         """Checks the king"""
         squares = Squares.getSquares()
         coord = self.square.getCoord()
         kingSquare = kingPiece.square
         checkingSquares = [self.square]
 
-        for i in range(8):
-            sq_coord = coord[0] + dirOfCheck[0]*i, coord[1] + dirOfCheck[1]*i
-            if sq_coord == kingSquare.getCoord():
-                break
-            checkingSquares.append(squares[sq_coord[0]][sq_coord[1]])
+        if dirOfCheck is not None:
+            for i in range(8):
+                sq_coord = coord[0] + dirOfCheck[0]*i, coord[1] + dirOfCheck[1]*i
+                if sq_coord == kingSquare.getCoord():
+                    break
+                checkingSquares.append(squares[sq_coord[0]][sq_coord[1]])
 
         kingPiece.check(checkingSquares)
 
@@ -565,11 +566,21 @@ class Knight(Piece):
                 continue
 
             sq = squares[new_coord[0]][new_coord[1]]
+            piece = sq.getPiece()
             self.addTrackedSquare(sq)
-            if not sq.hasPiece() or self.isOppositeColorAs(sq.getPiece()):
-                self.addMove(sq)
+
+            if sq.hasPiece():
+                # Check if you're checking the enemy king
+                if self.isOppositeColorAs(piece):
+                    if piece.pieceName == "King":
+                        self.checkKing(piece)
+                    self.addMove(sq)
+                else:
+                    # If ally piece on this square, can't move there but
+                    # still control the square.
+                    self.addNonMoveControlledSquare(sq)
             else:
-                self.addNonMoveControlledSquare(sq)
+                self.addMove(sq)
 
         super().updateSquares(init=init)
     

@@ -32,6 +32,8 @@ class Piece():
         """Sets this piece's captured attribute to True. Means that this
         piece no longer exists on the board."""
         self.clearTrackedAndControlledSquares()
+        if self.pinning is not None:
+            self.unpinPiece()
         self.captured = True
 
     def addTrackedSquare(self, square):

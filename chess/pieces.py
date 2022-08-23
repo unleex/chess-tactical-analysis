@@ -246,9 +246,9 @@ class Piece():
         if type(self) != King:
             if self.pinnedTo:
                 moves = set(self.pinnedTo).intersection(set(self.moves))
-            elif King.whiteCheckingSquares and self.isWhite:
+            elif (King.whiteCheckingSquares is not None) and self.isWhite:
                 moves = set(King.whiteCheckingSquares).intersection(set(self.moves))
-            elif King.blackCheckingSquares and (not self.isWhite):
+            elif (King.blackCheckingSquares is not None) and (not self.isWhite):
                 moves = set(King.blackCheckingSquares).intersection(set(self.moves))
             else:
                 moves = self.moves
@@ -277,8 +277,8 @@ class King(Piece):
 
     # If the white or black king are checked, the checking squares the
     # direction in which a king is being checked.
-    whiteCheckingSquares = []
-    blackCheckingSquares = []
+    whiteCheckingSquares = None
+    blackCheckingSquares = None
     checkedKing = None
     
     def __init__(self, isWhite, square):
@@ -298,6 +298,16 @@ class King(Piece):
 
     def check(self, checkingSquares):
         """Called by an enemy piece when they check this king."""
+        # If the king is already checked, there is a double check
+        # and the king MUST move, there are no checking squares
+        # to block.
+        if self.checked:
+            if self.isWhite:
+                King.whiteCheckingSquares = []
+            else:
+                King.blackCheckingSquares = []
+            return
+            
         self.checked = True
         King.checkedKing = self
         if self.isWhite:

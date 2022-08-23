@@ -1,5 +1,9 @@
 """Class that determines whether some of chess' special moves are legal"""
 from squares import Squares
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QPushButton, QSizePolicy
+from PySide6.QtCore import QSize
+from PySide6.QtGui import QIcon
+import resources
 
 class Castle:
 
@@ -86,3 +90,53 @@ class EnPassant:
 
     def __init__(cls):
         pass
+
+
+class Promotion():
+
+    @classmethod
+    def getPromotionDialog(cls, isWhite, promoteToFunc):
+        dialog = QWidget()
+        layout = QHBoxLayout()
+
+        queenButton = QPushButton()
+        rookButton = QPushButton()
+        knightButton = QPushButton()
+        bishopButton = QPushButton()
+
+        queenButton.clicked.connect(lambda: promoteToFunc("Queen"))
+        rookButton.clicked.connect(lambda: promoteToFunc("Rook"))
+        knightButton.clicked.connect(lambda: promoteToFunc("Knight"))
+        bishopButton.clicked.connect(lambda: promoteToFunc("Bishop"))
+
+        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        queenButton.setSizePolicy(sizePolicy)
+        rookButton.setSizePolicy(sizePolicy)
+        knightButton.setSizePolicy(sizePolicy)
+        bishopButton.setSizePolicy(sizePolicy)
+
+        layout.addWidget(queenButton)
+        layout.addWidget(rookButton)
+        layout.addWidget(knightButton)
+        layout.addWidget(bishopButton)
+
+        dialog.setLayout(layout)
+
+        iconSize = QSize(100, 100)
+        queenButton.setIconSize(iconSize)
+        rookButton.setIconSize(iconSize)
+        knightButton.setIconSize(iconSize)
+        bishopButton.setIconSize(iconSize)
+
+        if isWhite:
+            queenButton.setIcon(QIcon(":pieces\\wQueen"))
+            rookButton.setIcon(QIcon(":pieces\\wRook"))
+            knightButton.setIcon(QIcon(":pieces\\wKnight"))
+            bishopButton.setIcon(QIcon(":pieces\\wBishop"))
+        else:
+            queenButton.setIcon(QIcon(":pieces\\bQueen"))
+            rookButton.setIcon(QIcon(":pieces\\bRook"))
+            knightButton.setIcon(QIcon(":pieces\\bKnight"))
+            bishopButton.setIcon(QIcon(":pieces\\bBishop"))
+
+        return dialog

@@ -32,6 +32,8 @@ class Piece():
         """Sets this piece's captured attribute to True. Means that this
         piece no longer exists on the board."""
         self.clearTrackedAndControlledSquares()
+        if self.pinning is not None:
+            self.unpinPiece()
         self.captured = True
 
     def addTrackedSquare(self, square):
@@ -140,18 +142,19 @@ class Piece():
         if not init:
             logger.pieceUpdatedSquares(self)
 
-    def checkKing(self, kingPiece, dirOfCheck):
+    def checkKing(self, kingPiece, dirOfCheck = None):
         """Checks the king"""
         squares = Squares.getSquares()
         coord = self.square.getCoord()
         kingSquare = kingPiece.square
         checkingSquares = [self.square]
 
-        for i in range(8):
-            sq_coord = coord[0] + dirOfCheck[0]*i, coord[1] + dirOfCheck[1]*i
-            if sq_coord == kingSquare.getCoord():
-                break
-            checkingSquares.append(squares[sq_coord[0]][sq_coord[1]])
+        if dirOfCheck is not None:
+            for i in range(8):
+                sq_coord = coord[0] + dirOfCheck[0]*i, coord[1] + dirOfCheck[1]*i
+                if sq_coord == kingSquare.getCoord():
+                    break
+                checkingSquares.append(squares[sq_coord[0]][sq_coord[1]])
 
         kingPiece.check(checkingSquares)
 
@@ -380,12 +383,14 @@ class Queen(Piece):
     b_id = 0
     pieceName = "Queen"
     
-    def __init__(self, isWhite, square):
+    def __init__(self, isWhite, square, promotion = False):
         super().__init__(isWhite, square)
         self.directions = (
             (1, 0), (0, -1), (-1, 0), (0, 1),
             (1, 1), (1, -1), (-1, -1), (-1, 1)
         )
+        if promotion:
+            self.updateSquares()
 
     def updateSquares(self, init=False):
         super().linearUpdateSquares(init)
@@ -403,6 +408,19 @@ class Pawn(Piece):
     def updateSquares(self, init=False):
         """Gets the squares this pawn can move to and updates the state
         of any squares that this pawn affects."""
+        
+        def addUpperAdjacentSquare():
+            """Controls the two squares on the pawn's diagonals. Adds
+            them to the moves list if there is an enemy piece"""
+            self.addTrackedSquare(sq)
+            self.controlledSquares.append(sq)
+            sq.addControllingPiece(self)
+            piece = sq.getPiece()
+            if sq.hasPiece() and self.isOppositeColorAs(piece):
+                if piece.pieceName == "King":
+                    self.checkKing(piece)
+                self.addMove(sq)
+
         if self.captured:
             return
         
@@ -415,33 +433,17 @@ class Pawn(Piece):
         if self.isWhite:
             if coord[0] != 0:
                 sq = squares[coord[0]-1][coord[1]+1]
-                self.addTrackedSquare(sq)
-                self.controlledSquares.append(sq)
-                sq.addControllingPiece(self)
-                if sq.hasPiece() and self.isOppositeColorAs(sq.getPiece()):
-                    self.addMove(sq)
+                addUpperAdjacentSquare()
             if coord[0] != 7:
                 sq = squares[coord[0]+1][coord[1]+1]
-                self.addTrackedSquare(sq)
-                self.controlledSquares.append(sq)
-                sq.addControllingPiece(self)
-                if sq.hasPiece() and self.isOppositeColorAs(sq.getPiece()):
-                    self.addMove(sq)
+                addUpperAdjacentSquare()
         else:
             if coord[0] != 0:
                 sq = squares[coord[0]-1][coord[1]-1]
-                self.addTrackedSquare(sq)
-                self.controlledSquares.append(sq)
-                sq.addControllingPiece(self)
-                if sq.hasPiece() and self.isOppositeColorAs(sq.getPiece()):
-                    self.addMove(sq)
+                addUpperAdjacentSquare()
             if coord[0] != 7:
                 sq = squares[coord[0]+1][coord[1]-1]
-                self.addTrackedSquare(sq)
-                self.controlledSquares.append(sq)
-                sq.addControllingPiece(self)
-                if sq.hasPiece() and self.isOppositeColorAs(sq.getPiece()):
-                    self.addMove(sq)
+                addUpperAdjacentSquare()
 
         super().updateSquares(init=init)
 
@@ -488,6 +490,19 @@ class Pawn(Piece):
         # adjacent squares. This function enables them to move there, but
         # the square is already 'controlled'.
         self.moves.append(square)
+
+    def setSquare(self, square):
+        if square.getCoord()[1] == 0 or square.getCoord()[1] == 7:
+            self.clearTrackedAndControlledSquares()
+            # Get pieces that tracked the square the pawn was on
+            # and update them because the pawn is no longer there.
+            trackingPieces = self.square.getTrackingPieces()
+            self.square.setPiece(None)
+            for piece in trackingPieces:
+                piece.updateSquares()
+            
+            return "promotion"
+        return super().setSquare(square)
     
 
 class Rook(Piece):
@@ -495,7 +510,7 @@ class Rook(Piece):
     b_id = 0
     pieceName = "Rook"
 
-    def __init__(self, isWhite, square):
+    def __init__(self, isWhite, square, promotion = False):
         super().__init__(isWhite, square)
         # Add rook to Castle class to allow king to determine when it
         # can castle.
@@ -508,31 +523,11 @@ class Rook(Piece):
             (1, 0), (0, -1), (-1, 0), (0, 1)
         )
         self.moved = False
+        if promotion:
+            self.updateSquares()
 
     def updateSquares(self, init=False):
         super().linearUpdateSquares(init)
-                    
-    def pinPiece(self, piece, direction):
-        """Pins piece and gives the piece its allowed squares"""
-        # NOT TESTED
-        coord = self.square.getCoord()
-        squares = Squares.getSquares()
-
-        pieceCoord = piece.square.getCoord()
-        allowedSquares = []
-        
-        # Get all the squares the pinned piece has available to it
-        for i in range(8):
-            new_coord = coord[0] + direction[0]*i, coord[1] + direction[1]*i
-            if ((new_coord[0] == pieceCoord[0])
-                    and (new_coord[1] == pieceCoord[1])):
-                break
-
-            sq = squares[new_coord[0]][new_coord[1]]
-            allowedSquares.append(sq)
-        
-        self.pinning.append(piece)
-        piece.setPinningPiece(self, allowedSquares)
 
     def setSquare(self, square):
         self.moved = True
@@ -544,8 +539,10 @@ class Knight(Piece):
     b_id = 0
     pieceName = "Knight"  
     
-    def __init__(self, isWhite, square):
+    def __init__(self, isWhite, square, promotion = False):
         super().__init__(isWhite, square)
+        if promotion:
+            self.updateSquares()
 
     def updateSquares(self, init=False):
         if self.captured:
@@ -566,11 +563,21 @@ class Knight(Piece):
                 continue
 
             sq = squares[new_coord[0]][new_coord[1]]
+            piece = sq.getPiece()
             self.addTrackedSquare(sq)
-            if not sq.hasPiece() or self.isOppositeColorAs(sq.getPiece()):
-                self.addMove(sq)
+
+            if sq.hasPiece():
+                # Check if you're checking the enemy king
+                if self.isOppositeColorAs(piece):
+                    if piece.pieceName == "King":
+                        self.checkKing(piece)
+                    self.addMove(sq)
+                else:
+                    # If ally piece on this square, can't move there but
+                    # still control the square.
+                    self.addNonMoveControlledSquare(sq)
             else:
-                self.addNonMoveControlledSquare(sq)
+                self.addMove(sq)
 
         super().updateSquares(init=init)
     
@@ -580,11 +587,13 @@ class Bishop(Piece):
     b_id = 0
     pieceName = "Bishop"
     
-    def __init__(self, isWhite, square):
+    def __init__(self, isWhite, square, promotion = False):
         super().__init__(isWhite, square)
         self.directions = (
             (1, 1), (1, -1), (-1, -1), (-1, 1)
         )
+        if promotion:
+            self.updateSquares()
 
     def updateSquares(self, init=False):
         super().linearUpdateSquares(init)

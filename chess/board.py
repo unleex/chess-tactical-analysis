@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (QGraphicsScene, QGraphicsView,
     QGraphicsRectItem, QGraphicsPixmapItem)
 from PySide6.QtWidgets import QGraphicsSceneMouseEvent
 from interface import BoardToGameInterface
+from special_moves import Promotion
 
 
 # Create a list with the names of each square starting from
@@ -63,6 +64,8 @@ class BoardScene(QGraphicsScene):
 
         # Util variables
         self.highlightedSquares = []
+
+        self.promotionDialogShown = False
 
     def createSquares(self):
         """Create Square objects for every square on the board and put
@@ -132,6 +135,44 @@ class BoardScene(QGraphicsScene):
 
         self.unhighlightSquares()
 
+    def showPromotionDialog(self, state):
+        """When a pawn reaches the 1st or 8th rank, this shows a screen
+        that lets the user pick what piece they want to promote the
+        pawn to.
+        
+        state : tuple
+            [0] square pawn moved from, [1] square pawn promoting on,
+            [2] color of the pawn"""
+        self.promotionDialogShown = True
+        self.promotionDialog = self.addWidget(
+            Promotion.getPromotionDialog(
+                state[2], 
+                lambda promoteTo: self.promotePawn(state, promoteTo)
+            )
+        )
+
+        # Centers the dialog in the middle of the board
+        x, y = self.promotionDialog.boundingRect().size().toTuple()
+        center = self.sceneRect().center() - QPointF((1/2)*x, (1/2)*y)
+        self.promotionDialog.setPos(center)
+
+    def promotePawn(self, state, promoteTo):
+        """Promotes a pawn to promoteTo"""
+        self.promotionDialogShown = False
+        self.removeItem(self.promotionDialog)
+
+        old_sq, new_sq, whiteTurn = state
+        from_sq, to_sq = self.squares[old_sq], self.squares[new_sq]
+        if whiteTurn:
+            promoteTo = "w" + promoteTo
+        else:
+            promoteTo = "b" + promoteTo
+
+        from_sq.movePieceTo(to_sq, promotingTo=promoteTo)
+        self.unhighlightSquares()
+
+        BoardToGameInterface.pawnPromoted(promoteTo)
+
     def printSquares(self):
         """Prints all the squares and the pieces on each square.
         Used for debugging."""
@@ -163,6 +204,9 @@ class Square(QGraphicsRectItem):
         """When a square is clicked and there is a piece on that square,
         this function will highlight the squares that the piece can move
         to."""
+        # Don't let squares be clicked if there is a pawn promoting.
+        if self.scene().promotionDialogShown:
+            return super().mousePressEvent(event)
         # Let the game know this square has been clicked
         result = BoardToGameInterface.squareClicked(
             self.name)
@@ -177,6 +221,8 @@ class Square(QGraphicsRectItem):
         elif action == "castle":
             self.scene().movePiece(result["kingMove"])
             self.scene().movePiece(result["rookMove"])
+        elif action == "showPromotionDialog":
+            self.scene().showPromotionDialog(result["state"])
 
         return super().mousePressEvent(event)
 
@@ -191,10 +237,17 @@ class Square(QGraphicsRectItem):
     def getPiece(self):
         return self.piece
 
-    def movePieceTo(self, square_to):
+    def movePieceTo(self, square_to, promotingTo=None):
         """Moves the piece on this square to another square"""
         piece, pixmap = self.piece, self.piecePixmap
         self.piece = self.piecePixmap = None
+
+        if promotingTo is not None:
+            self.scene().removeItem(pixmap)  # remove pawn
+
+            newPixmap = self.scene().addPixmap(QPixmap(f":pieces\\{promotingTo}"))
+            square_to.setPiece(promotingTo, newPixmap)
+            return
 
         square_to.setPiece(piece, pixmap)
 

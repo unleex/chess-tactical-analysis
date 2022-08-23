@@ -408,6 +408,19 @@ class Pawn(Piece):
     def updateSquares(self, init=False):
         """Gets the squares this pawn can move to and updates the state
         of any squares that this pawn affects."""
+        
+        def addUpperAdjacentSquare():
+            """Controls the two squares on the pawn's diagonals. Adds
+            them to the moves list if there is an enemy piece"""
+            self.addTrackedSquare(sq)
+            self.controlledSquares.append(sq)
+            sq.addControllingPiece(self)
+            piece = sq.getPiece()
+            if sq.hasPiece() and self.isOppositeColorAs(piece):
+                if piece.pieceName == "King":
+                    self.checkKing(piece)
+                self.addMove(sq)
+
         if self.captured:
             return
         
@@ -420,33 +433,17 @@ class Pawn(Piece):
         if self.isWhite:
             if coord[0] != 0:
                 sq = squares[coord[0]-1][coord[1]+1]
-                self.addTrackedSquare(sq)
-                self.controlledSquares.append(sq)
-                sq.addControllingPiece(self)
-                if sq.hasPiece() and self.isOppositeColorAs(sq.getPiece()):
-                    self.addMove(sq)
+                addUpperAdjacentSquare()
             if coord[0] != 7:
                 sq = squares[coord[0]+1][coord[1]+1]
-                self.addTrackedSquare(sq)
-                self.controlledSquares.append(sq)
-                sq.addControllingPiece(self)
-                if sq.hasPiece() and self.isOppositeColorAs(sq.getPiece()):
-                    self.addMove(sq)
+                addUpperAdjacentSquare()
         else:
             if coord[0] != 0:
                 sq = squares[coord[0]-1][coord[1]-1]
-                self.addTrackedSquare(sq)
-                self.controlledSquares.append(sq)
-                sq.addControllingPiece(self)
-                if sq.hasPiece() and self.isOppositeColorAs(sq.getPiece()):
-                    self.addMove(sq)
+                addUpperAdjacentSquare()
             if coord[0] != 7:
                 sq = squares[coord[0]+1][coord[1]-1]
-                self.addTrackedSquare(sq)
-                self.controlledSquares.append(sq)
-                sq.addControllingPiece(self)
-                if sq.hasPiece() and self.isOppositeColorAs(sq.getPiece()):
-                    self.addMove(sq)
+                addUpperAdjacentSquare()
 
         super().updateSquares(init=init)
 

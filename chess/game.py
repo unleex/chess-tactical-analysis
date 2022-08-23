@@ -163,7 +163,7 @@ class ChessGame(QWidget):
             if (self.selectedPiece is not None
                     and self.selectedPiece.isOppositeColorAs(piece)
                     and self.selectedPiece.canMoveTo(sq)):
-                
+
                 moveType = self.selectedPiece.setSquare(sq)
                 old_sq = self.selectedSquare
                 turn = self.whiteTurn
@@ -211,6 +211,7 @@ class ChessGame(QWidget):
                 moveType = self.selectedPiece.setSquare(sq) # Moves the piece to sq
                 old_sq = self.selectedSquare
                 turn = self.whiteTurn
+                EnPassant.reset(turn)  # if enPassant was available, remove it
                 
                 if moveType == "promotion":
                     self.promotionSquares = (old_sq, sq)
@@ -243,6 +244,17 @@ class ChessGame(QWidget):
                         "action": "castle",
                         "kingMove": [str(old_sq), str(sq)],
                         "rookMove": moveType[1]
+                    }
+
+                elif moveType[0] == "enPassant":
+                    self.gameInfo.moveList.addMove(
+                        self.createMoveName(old_sq, sq, capture=True),
+                        turn
+                    )
+                    return {
+                        "action": "enPassant",
+                        "squares": [str(old_sq), str(sq)],
+                        "take": str(EnPassant.take)
                     }
             else:
                 # This can run if there is no selected piece or the

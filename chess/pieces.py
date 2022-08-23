@@ -1,7 +1,7 @@
 """This module defines classes for every type of chess piece"""
 import logger
 from squares import Squares
-from special_moves import Castle
+from special_moves import Castle, EnPassant
 
 
 class Piece():
@@ -510,9 +510,22 @@ class Pawn(Piece):
             self.square.setPiece(None)
             for piece in trackingPieces:
                 piece.updateSquares()
-            
             return "promotion"
+        elif (self.square.getCoord()[1] == 1 or self.square.getCoord()[1] == 6
+                and (square.getCoord()[1] == 3 or square.getCoord()[1] == 4)):
+            EnPassant.potentialEnPassant(square, self.isWhite)
+        elif square == EnPassant.move:
+            EnPassant.take.setPiece(None)
+            super().setSquare(square)
+            return "enPassant", EnPassant.take
+
         return super().setSquare(square)
+
+    
+    def getMoves(self, nameOnly = False):
+        if self.square in EnPassant.canTakeEnPassant:
+            self.addMove(EnPassant.move)
+        return super().getMoves(nameOnly)
     
 
 class Rook(Piece):

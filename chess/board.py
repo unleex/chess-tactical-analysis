@@ -135,6 +135,11 @@ class BoardScene(QGraphicsScene):
 
         self.unhighlightSquares()
 
+    def removePiece(self, square):
+        sq = self.squares[square]
+        self.removeItem(sq.getPiecePixmap())
+        sq.setPiece(None, None)
+
     def showPromotionDialog(self, state):
         """When a pawn reaches the 1st or 8th rank, this shows a screen
         that lets the user pick what piece they want to promote the
@@ -221,6 +226,9 @@ class Square(QGraphicsRectItem):
         elif action == "castle":
             self.scene().movePiece(result["kingMove"])
             self.scene().movePiece(result["rookMove"])
+        elif action == "enPassant":
+            self.scene().movePiece(result["squares"])
+            self.scene().removePiece(result["take"])
         elif action == "showPromotionDialog":
             self.scene().showPromotionDialog(result["state"])
 
@@ -254,6 +262,10 @@ class Square(QGraphicsRectItem):
     def setPiecePixmap(self, pixmap: QGraphicsPixmapItem):
         """Gives a reference to the square of the pixmap item of the piece
         on this square."""
+        if pixmap is None:
+            self.piecePixmap = None
+            return
+        
         if self.hasPiece():
             # If there was a piece on this square, it was captured
             # and its pixmap can be deleted off the scene
@@ -275,4 +287,3 @@ class Square(QGraphicsRectItem):
         if self.piece is None:
             return False
         return True
-

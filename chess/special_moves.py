@@ -88,8 +88,48 @@ class Castle:
 
 class EnPassant:
 
-    def __init__(cls):
-        pass
+    canTakeEnPassant = []
+    take = None
+    move = None
+    resetOnWhiteTurn = False
+
+    @classmethod
+    def potentialEnPassant(cls, square, isWhite):
+        squares = Squares.getSquares()
+        coord = square.getCoord()
+        cls.take = square
+        if isWhite:
+            cls.resetOnWhiteTurn = False
+        else:
+            cls.resetOnWhiteTurn = True
+        
+        # coordinates for square to the left
+        coordL = coord[0] - 1, coord[1]
+        # coordinates for square to the right
+        coordR = coord[0] + 1, coord[1]
+        # square to take on
+        if isWhite:
+            coordM = coord[0], coord[1] - 1
+        else:
+            coordM = coord[0], coord[1] + 1
+        cls.move = squares[coordM[0]][coordM[1]]
+
+        if coord[0] == 0:
+            cls.canTakeEnPassant.append(squares[coordR[0]][coordR[1]])
+        elif coord[0] == 7:
+            cls.canTakeEnPassant.append(squares[coordL[0]][coordL[1]])
+        else:
+            cls.canTakeEnPassant.append(squares[coordR[0]][coordR[1]])
+            cls.canTakeEnPassant.append(squares[coordL[0]][coordL[1]])
+    
+    @classmethod
+    def reset(cls, turn):
+        """En passant only available in the immediate turn, so if en
+        passant was available and en passant was available, it is
+        removed."""
+        if turn is cls.resetOnWhiteTurn:
+            cls.canTakeEnPassant = []
+            cls.move = None
 
 
 class Promotion():

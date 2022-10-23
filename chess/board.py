@@ -34,6 +34,7 @@ class BoardScene(QGraphicsScene):
     # Make a little smaller than the view for some margins
     SCENE_SIZE = QSize(555, 555)
     SQUARE_SIZE = SCENE_SIZE / 8
+    PIECE_SIZE = SQUARE_SIZE - QSize(10, 10)
 
     INITIAL_POS = {
         "wRook": ("a1", "h1"),
@@ -105,7 +106,8 @@ class BoardScene(QGraphicsScene):
         """Draw the pieces in their initial positions"""
         # These ids are appened to the piece's name so that they're unique
         for piece in self.INITIAL_POS:
-            img = QPixmap(f":pieces\\{piece}")
+            img = QPixmap(f":pieces\\{piece}").scaled(self.PIECE_SIZE,
+                                                      Qt.KeepAspectRatio)
             for id_, pos in enumerate(self.INITIAL_POS[piece]):
                 imgItem = self.addPixmap(img)
                 sq = self.squares[pos]

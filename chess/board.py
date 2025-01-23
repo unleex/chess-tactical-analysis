@@ -1,6 +1,9 @@
 """This module handles the drawing of the board and its pieces."""
 from __future__ import annotations
 import resources
+import os
+
+
 from PySide6.QtCore import Qt, QSize, QRectF, QPointF
 from PySide6.QtGui import QBrush, QPixmap
 from PySide6.QtWidgets import (QGraphicsScene, QGraphicsView,
@@ -106,8 +109,10 @@ class BoardScene(QGraphicsScene):
         """Draw the pieces in their initial positions"""
         # These ids are appened to the piece's name so that they're unique
         for piece in self.INITIAL_POS:
-            img = QPixmap(f":pieces\\{piece}").scaled(self.PIECE_SIZE,
-                                                      Qt.KeepAspectRatio)
+            img = QPixmap(f":pieces{os.path.sep}{piece}").scaled(
+                self.PIECE_SIZE,
+                Qt.KeepAspectRatio
+                )
             for id_, pos in enumerate(self.INITIAL_POS[piece]):
                 imgItem = self.addPixmap(img)
                 sq = self.squares[pos]

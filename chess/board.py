@@ -5,7 +5,7 @@ import os
 
 
 from PySide6.QtCore import Qt, QSize, QRectF, QPointF, QSizeF
-from PySide6.QtGui import QBrush, QPixmap
+from PySide6.QtGui import QBrush, QPixmap, QColor
 from PySide6.QtWidgets import (QGraphicsScene, QGraphicsView,
     QGraphicsRectItem, QGraphicsPixmapItem)
 from PySide6.QtWidgets import QGraphicsSceneMouseEvent
@@ -22,13 +22,20 @@ class BoardView(QGraphicsView):
 
     VIEW_SIZE = QSize(600, 600)
 
-    def __init__(self):
+    def __init__(
+        self,
+        light_color: QColor,
+        dark_color: QColor
+        ):
         super().__init__()
         self.setGeometry(
             0, 0, self.VIEW_SIZE.width(), self.VIEW_SIZE.height())
         self.setMinimumSize(self.VIEW_SIZE)
 
-        scene = BoardScene()
+        scene = BoardScene(
+            light_color=light_color,
+            dark_color=dark_color
+        )
         self.setScene(scene)
 
 
@@ -54,13 +61,20 @@ class BoardScene(QGraphicsScene):
         "bPawn": ("a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7"),
     }
 
-    def __init__(self):
+    def __init__(
+            self, 
+            light_color,
+            dark_color
+        ):
         super().__init__()
         self.setSceneRect(
             5, 5, self.SCENE_SIZE.width(), self.SCENE_SIZE.height())
 
         # Create the squares.
-        self.squares = self.createSquares()
+        self.squares = self.createSquares(
+            light_color=light_color,
+            dark_color=dark_color
+        )
         # Draw the board
         self.drawBoard()
         # Draw pieces on their initial position
@@ -71,7 +85,11 @@ class BoardScene(QGraphicsScene):
 
         self.promotionDialogShown = False
 
-    def createSquares(self) -> dict[str, Square]:
+    def createSquares(
+            self, 
+            light_color: QColor,
+            dark_color: QColor,
+        ) -> dict[str, Square]:
         """Create Square objects for every square on the board and put
         them in a dictionary."""
         squares = {}
@@ -93,10 +111,10 @@ class BoardScene(QGraphicsScene):
 
                 if (c%2==0 and whiteOnEven) or (c%2==1 and not whiteOnEven):
                     squares[name] = Square(
-                        rect=rect, color=Qt.white, name=name)
+                        rect=rect, color=light_color, name=name)
                 else:
                     squares[name] = Square(
-                        rect=rect, color=Qt.black, name=name)
+                        rect=rect, color=dark_color, name=name)
 
         return squares
 

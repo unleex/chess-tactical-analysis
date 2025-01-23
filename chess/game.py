@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QFrame, QLabel,
                                QGridLayout, QVBoxLayout)
+from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt
 from board import BoardView, Square
 from interface import BoardToGameInterface
@@ -10,13 +11,20 @@ import logger
 
 class ChessGame(QWidget):
     
-    def __init__(self):
+    def __init__(
+            self,
+            light_square_color: QColor,
+            dark_square_color: QColor
+            ):
         super().__init__()
 
         BoardToGameInterface.setCurrentGame(self)
 
         # Widgets
-        self.board = BoardView()
+        self.board = BoardView(
+            light_color=light_square_color,
+            dark_color=dark_square_color
+        )
         self.gameInfo = GameInfo()
         
         # Game variables

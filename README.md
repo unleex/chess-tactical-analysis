@@ -1,2 +1,2 @@
 # chess
-Let's try and make a chess program with PyQt6
+This chess tool will provide a broader view on the board. Pinned pieces, key squares, are highlighted, making it easier to navigate in any position!

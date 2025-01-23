@@ -1,0 +1,237 @@
+UPDATED wPawn3
+wPawn3 on square d4
+Controlling: [d5, c5, e5]
+Pinned By: []
+Moves: [d5]
+--------------------
+START	wPawn3 HAS MOVED	--------------------
+PIECES AFFECTED: {wQueen0, wKing0, wKnight0, bQueen0, wBishop0}
+UPDATED wQueen0
+wQueen0 on square d1
+Controlling: [e1, f1, g1, h1, c1, b1, a1, d2, d3, d4, d5, d6, d7, d8, e2, f3, g4, h5, c2, b3, a4]
+Pinned By: []
+Moves: [d2, d3]
+--------------------
+UPDATED wKing0
+wKing0 on square e1
+Controlling: [f1, e2, d1, f2, d2]
+Pinned By: []
+Moves: [d2]
+--------------------
+UPDATED wKnight0
+wKnight0 on square b1
+Controlling: [c3, d2, a3]
+Pinned By: []
+Moves: [c3, d2, a3]
+--------------------
+UPDATED bQueen0
+bQueen0 on square d8
+Controlling: [e8, f8, g8, h8, d7, d6, d5, d4, d3, d2, d1, c8, b8, a8, e7, f6, g5, h4, c7, b6, a5]
+Pinned By: []
+Moves: []
+--------------------
+UPDATED wBishop0
+wBishop0 on square c1
+Controlling: [d2, e3, f4, g5, h6, b2, a3]
+Pinned By: []
+Moves: [d2, e3, f4, g5, h6]
+--------------------
+END  	wPawn3 HAS MOVED	--------------------
+UPDATED bKing0
+bKing0 on square e8
+Controlling: [f8, d8, e7, f7, d7]
+Pinned By: []
+Moves: []
+--------------------
+UPDATED bPawn3
+bPawn3 on square d5
+Controlling: [d4, c4, e4]
+Pinned By: []
+Moves: []
+--------------------
+START	bPawn3 HAS MOVED	--------------------
+PIECES AFFECTED: {bKnight0, wQueen0, bBishop0, bQueen0, bKing0, wPawn3}
+UPDATED bKnight0
+bKnight0 on square b8
+Controlling: [d7, c6, a6]
+Pinned By: []
+Moves: [d7, c6, a6]
+--------------------
+UPDATED wQueen0
+wQueen0 on square d1
+Controlling: [e1, f1, g1, h1, c1, b1, a1, d2, d3, d4, d5, d6, d7, d8, e2, f3, g4, h5, c2, b3, a4]
+Pinned By: []
+Moves: [d2, d3]
+--------------------
+UPDATED bBishop0
+bBishop0 on square c8
+Controlling: [d7, e6, f5, g4, h3, b7, a6]
+Pinned By: []
+Moves: [d7, e6, f5, g4, h3]
+--------------------
+UPDATED bQueen0
+bQueen0 on square d8
+Controlling: [e8, f8, g8, h8, d7, d6, d5, d4, d3, d2, d1, c8, b8, a8, e7, f6, g5, h4, c7, b6, a5]
+Pinned By: []
+Moves: [d7, d6]
+--------------------
+UPDATED bKing0
+bKing0 on square e8
+Controlling: [f8, d8, e7, f7, d7]
+Pinned By: []
+Moves: [d7]
+--------------------
+UPDATED wPawn3
+wPawn3 on square d4
+Controlling: [d5, c5, e5]
+Pinned By: []
+Moves: []
+--------------------
+END  	bPawn3 HAS MOVED	--------------------
+UPDATED wKing0
+wKing0 on square e1
+Controlling: [f1, e2, d1, f2, d2]
+Pinned By: []
+Moves: [d2]
+--------------------
+UPDATED wBishop0
+wBishop0 on square g5
+Controlling: [h6, h4, f4, e3, d2, c1, f6, e7, d8]
+Pinned By: []
+Moves: [h6, h4, f4, e3, d2, c1, f6, e7]
+--------------------
+START	wBishop0 HAS MOVED	--------------------
+PIECES AFFECTED: {wQueen0, wRook0, bQueen0, wRook1, bPawn6}
+UPDATED wQueen0
+wQueen0 on square d1
+Controlling: [e1, f1, g1, h1, c1, b1, a1, d2, d3, d4, d5, d6, d7, d8, e2, f3, g4, h5, c2, b3, a4]
+Pinned By: []
+Moves: [c1, d2, d3]
+--------------------
+UPDATED wRook0
+wRook0 on square a1
+Controlling: [b1, c1, d1, e1, f1, g1, h1, a2, a3, a4, a5, a6, a7, a8]
+Pinned By: []
+Moves: []
+--------------------
+UPDATED bQueen0
+bQueen0 on square d8
+Controlling: [e8, f8, g8, h8, d7, d6, d5, d4, d3, d2, d1, c8, b8, a8, e7, f6, g5, h4, c7, b6, a5]
+Pinned By: []
+Moves: [d7, d6]
+--------------------
+UPDATED wRook1
+wRook1 on square h1
+Controlling: [g1, f1, e1, d1, c1, b1, a1, h2, h3, h4, h5, h6, h7, h8]
+Pinned By: []
+Moves: []
+--------------------
+UPDATED bPawn6
+bPawn6 on square g7
+Controlling: [g6, g5, f6, h6]
+Pinned By: []
+Moves: [g6]
+--------------------
+END  	wBishop0 HAS MOVED	--------------------
+UPDATED bKing0
+bKing0 on square e8
+Controlling: [f8, d8, e7, f7, d7]
+Pinned By: []
+Moves: [d7]
+--------------------
+UPDATED bPawn4
+bPawn4 on square e5
+Controlling: [e4, d4, f4]
+Pinned By: []
+Moves: [e4, d4]
+--------------------
+START	bPawn4 HAS MOVED	--------------------
+PIECES AFFECTED: {bBishop1, bQueen0, bKnight1, bKing0, wBishop0, wPawn3}
+UPDATED bBishop1
+bBishop1 on square f8
+Controlling: [g7, h6, e7, d6, c5, b4, a3]
+Pinned By: []
+Moves: [e7, d6, c5, b4, a3]
+--------------------
+UPDATED bQueen0
+bQueen0 on square d8
+Controlling: [e8, f8, g8, h8, d7, d6, d5, d4, d3, d2, d1, c8, b8, a8, e7, f6, g5, h4, c7, b6, a5]
+Pinned By: []
+Moves: [d7, d6, e7, f6, g5]
+--------------------
+UPDATED bKnight1
+bKnight1 on square g8
+Controlling: [h6, f6, e7]
+Pinned By: []
+Moves: [h6, f6, e7]
+--------------------
+UPDATED bKing0
+bKing0 on square e8
+Controlling: [f8, d8, e7, f7, d7]
+Pinned By: []
+Moves: [d7]
+--------------------
+UPDATED wBishop0
+wBishop0 on square g5
+Controlling: [h6, h4, f4, e3, d2, c1, f6, e7, d8]
+Pinned By: []
+Moves: [h6, h4, f4, e3, d2, c1, f6, e7, d8]
+--------------------
+UPDATED wPawn3
+wPawn3 on square d4
+Controlling: [d5, c5, e5]
+Pinned By: []
+Moves: [e5]
+--------------------
+END  	bPawn4 HAS MOVED	--------------------
+UPDATED wKing0
+wKing0 on square e1
+Controlling: [f1, e2, d1, f2, d2]
+Pinned By: []
+Moves: [d2]
+--------------------
+UPDATED wBishop0
+wBishop0 on square h4
+Controlling: [g3, f2, e1, g5, f6, e7, d8]
+Pinned By: []
+Moves: [g3, g5, f6, e7, d8]
+--------------------
+START	wBishop0 HAS MOVED	--------------------
+PIECES AFFECTED: {bRook1, bQueen0, wPawn7, wRook1, bPawn6}
+UPDATED bRook1
+bRook1 on square h8
+Controlling: [h7, h6, h5, h4, h3, h2, h1, g8, f8, e8, d8, c8, b8, a8]
+Pinned By: []
+Moves: []
+--------------------
+UPDATED bQueen0
+bQueen0 on square d8
+Controlling: [e8, f8, g8, h8, d7, d6, d5, d4, d3, d2, d1, c8, b8, a8, e7, f6, g5, h4, c7, b6, a5]
+Pinned By: []
+Moves: [d7, d6, e7, f6, g5, h4]
+--------------------
+UPDATED wPawn7
+wPawn7 on square h2
+Controlling: [h3, h4, g3]
+Pinned By: []
+Moves: [h3]
+--------------------
+UPDATED wRook1
+wRook1 on square h1
+Controlling: [g1, f1, e1, d1, c1, b1, a1, h2, h3, h4, h5, h6, h7, h8]
+Pinned By: []
+Moves: []
+--------------------
+UPDATED bPawn6
+bPawn6 on square g7
+Controlling: [g6, g5, f6, h6]
+Pinned By: []
+Moves: [g6, g5]
+--------------------
+END  	wBishop0 HAS MOVED	--------------------
+UPDATED bKing0
+bKing0 on square e8
+Controlling: [f8, d8, e7, f7, d7]
+Pinned By: []
+Moves: [d7]
+--------------------

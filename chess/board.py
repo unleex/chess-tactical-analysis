@@ -4,7 +4,7 @@ import resources
 import os
 
 
-from PySide6.QtCore import Qt, QSize, QRectF, QPointF
+from PySide6.QtCore import Qt, QSize, QRectF, QPointF, QSizeF
 from PySide6.QtGui import QBrush, QPixmap
 from PySide6.QtWidgets import (QGraphicsScene, QGraphicsView,
     QGraphicsRectItem, QGraphicsPixmapItem)
@@ -36,8 +36,8 @@ class BoardScene(QGraphicsScene):
 
     # Make a little smaller than the view for some margins
     SCENE_SIZE = QSize(555, 555)
-    SQUARE_SIZE = SCENE_SIZE / 8
-    PIECE_SIZE = SQUARE_SIZE - QSize(10, 10)
+    SQUARE_SIZE: QSize = SCENE_SIZE / 8 # type: ignore
+    PIECE_SIZE = SQUARE_SIZE - QSize(10, 10) # type: ignore
 
     INITIAL_POS = {
         "wRook": ("a1", "h1"),
@@ -71,7 +71,7 @@ class BoardScene(QGraphicsScene):
 
         self.promotionDialogShown = False
 
-    def createSquares(self):
+    def createSquares(self) -> dict[str, Square]:
         """Create Square objects for every square on the board and put
         them in a dictionary."""
         squares = {}
@@ -245,14 +245,14 @@ class Square(QGraphicsRectItem):
         """Sets a piece to this square. Has the effect of visually moving
         the piece to this square on the board."""
         # Must come first, as it checks the current value of self.piece
-        self.setPiecePixmap(pixmap)
+        self.setPiecePixmap(pixmap, align_center=True)
 
         self.piece = piece
 
     def getPiece(self):
         return self.piece
 
-    def movePieceTo(self, square_to, promotingTo=None):
+    def movePieceTo(self, square_to: Square, promotingTo=None):
         """Moves the piece on this square to another square"""
         piece, pixmap = self.piece, self.piecePixmap
         self.piece = self.piecePixmap = None
@@ -260,15 +260,22 @@ class Square(QGraphicsRectItem):
         if promotingTo is not None:
             self.scene().removeItem(pixmap)  # remove pawn
 
-            newPixmap = self.scene().addPixmap(QPixmap(f":pieces\\{promotingTo}"))
+            newPixmap = self.scene().addPixmap(QPixmap(f":pieces{os.path.sep}{promotingTo}"))
             square_to.setPiece(promotingTo, newPixmap)
             return
 
         square_to.setPiece(piece, pixmap)
 
-    def setPiecePixmap(self, pixmap: QGraphicsPixmapItem):
+    def setPiecePixmap(
+        self,
+        pixmap: QGraphicsPixmapItem,
+        align_center=False
+        ):
         """Gives a reference to the square of the pixmap item of the piece
         on this square."""
+
+        def sizef_to_pointf(size: QSizeF):
+            return QPointF(size.height(), size.width())
         if pixmap is None:
             self.piecePixmap = None
             return
@@ -277,8 +284,15 @@ class Square(QGraphicsRectItem):
             # If there was a piece on this square, it was captured
             # and its pixmap can be deleted off the scene
             self.scene().removeItem(self.piecePixmap)
-        
-        pixmap.setOffset(self.getCoord())  # moves img of piece to sq
+        move_to = self.getCoord()
+        print(f"initial pos: {pixmap.offset()}")
+        print(f"move: {move_to}")
+        if align_center:
+            square_size = sizef_to_pointf(self.rect().size())
+            pixmap_size = sizef_to_pointf(pixmap.boundingRect().size())
+            move_to += (square_size - pixmap_size) * 0.5 
+            print(f"align: {move_to}")
+        pixmap.setOffset(move_to)  # moves img of piece to sq
         self.piecePixmap = pixmap
 
     def getPiecePixmap(self):

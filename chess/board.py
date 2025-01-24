@@ -260,7 +260,7 @@ class Square(QGraphicsRectItem):
 
         return super().mousePressEvent(event)
 
-    def setPiece(self, piece: str, pixmap: QGraphicsPixmapItem):
+    def setPiece(self, piece: str | None, pixmap: QGraphicsPixmapItem | None):
         """Sets a piece to this square. Has the effect of visually moving
         the piece to this square on the board."""
         # Must come first, as it checks the current value of self.piece
@@ -276,8 +276,8 @@ class Square(QGraphicsRectItem):
         piece, pixmap = self.piece, self.piecePixmap
         self.piece = self.piecePixmap = None
 
-        assert pixmap is not None and piece is not None
         if promotingTo is not None:
+            assert pixmap is not None
             self.scene().removeItem(pixmap)  # remove pawn
 
             newPixmap = self.scene().addPixmap(QPixmap(f":pieces{os.path.sep}{promotingTo}"))
@@ -288,7 +288,7 @@ class Square(QGraphicsRectItem):
 
     def setPiecePixmap(
         self,
-        pixmap: QGraphicsPixmapItem,
+        pixmap: QGraphicsPixmapItem | None,
         align_center=False
         ):
         """Gives a reference to the square of the pixmap item of the piece
@@ -298,13 +298,14 @@ class Square(QGraphicsRectItem):
             return QPointF(size.height(), size.width())
         if pixmap is None:
             self.piecePixmap = None
-            return
-        assert self.piecePixmap is not None
+            
         if self.hasPiece():
             # If there was a piece on this square, it was captured
             # and its pixmap can be deleted off the scene
+            assert self.piecePixmap is not None
             self.scene().removeItem(self.piecePixmap)
         move_to = self.getCoord()
+        assert pixmap is not None
         if align_center:
             square_size = sizef_to_pointf(self.rect().size())
             pixmap_size = sizef_to_pointf(pixmap.boundingRect().size())

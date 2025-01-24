@@ -221,11 +221,11 @@ class Square(QGraphicsRectItem):
     piece that is on it and has mouse events to handle when the user
     clicks it."""
 
-    def __init__(self, rect: QRectF, color: Qt.GlobalColor, name):
+    def __init__(self, rect: QRectF, color: QColor, name):
         super().__init__(rect)
         self.name = name
-        self.piece = None
-        self.piecePixmap = None
+        self.piece: None | str = None
+        self.piecePixmap: None | QGraphicsPixmapItem = None
 
         # Set color of the square
         self.setBrush(QBrush(color))
@@ -234,8 +234,9 @@ class Square(QGraphicsRectItem):
         """When a square is clicked and there is a piece on that square,
         this function will highlight the squares that the piece can move
         to."""
+        scene: BoardScene = self.scene() # type: ignore[assignment]
         # Don't let squares be clicked if there is a pawn promoting.
-        if self.scene().promotionDialogShown:
+        if scene.promotionDialogShown:
             return super().mousePressEvent(event)
         # Let the game know this square has been clicked
         result = BoardToGameInterface.squareClicked(
@@ -243,23 +244,23 @@ class Square(QGraphicsRectItem):
 
         # Check result to know what to do
         if (action := result["action"]) == "highlightSquares":
-            self.scene().highlightSquares(result["squares"])
+            scene.highlightSquares(result["squares"])
         elif action == "movePiece":
-            self.scene().movePiece(result["squares"])
+            scene.movePiece(result["squares"])
         elif action == "unhighlightSquares":
-            self.scene().unhighlightSquares()
+            scene.unhighlightSquares()
         elif action == "castle":
-            self.scene().movePiece(result["kingMove"])
-            self.scene().movePiece(result["rookMove"])
+            scene.movePiece(result["kingMove"])
+            scene.movePiece(result["rookMove"])
         elif action == "enPassant":
-            self.scene().movePiece(result["squares"])
-            self.scene().removePiece(result["take"])
+            scene.movePiece(result["squares"])
+            scene.removePiece(result["take"])
         elif action == "showPromotionDialog":
-            self.scene().showPromotionDialog(result["state"])
+            scene.showPromotionDialog(result["state"])
 
         return super().mousePressEvent(event)
 
-    def setPiece(self, piece: str, pixmap: str):
+    def setPiece(self, piece: str, pixmap: QGraphicsPixmapItem):
         """Sets a piece to this square. Has the effect of visually moving
         the piece to this square on the board."""
         # Must come first, as it checks the current value of self.piece
@@ -275,13 +276,14 @@ class Square(QGraphicsRectItem):
         piece, pixmap = self.piece, self.piecePixmap
         self.piece = self.piecePixmap = None
 
+        assert pixmap is not None and piece is not None
         if promotingTo is not None:
             self.scene().removeItem(pixmap)  # remove pawn
 
             newPixmap = self.scene().addPixmap(QPixmap(f":pieces{os.path.sep}{promotingTo}"))
             square_to.setPiece(promotingTo, newPixmap)
             return
-
+        
         square_to.setPiece(piece, pixmap)
 
     def setPiecePixmap(
@@ -297,20 +299,18 @@ class Square(QGraphicsRectItem):
         if pixmap is None:
             self.piecePixmap = None
             return
-        
+        assert self.piecePixmap is not None
         if self.hasPiece():
             # If there was a piece on this square, it was captured
             # and its pixmap can be deleted off the scene
             self.scene().removeItem(self.piecePixmap)
         move_to = self.getCoord()
-        print(f"initial pos: {pixmap.offset()}")
-        print(f"move: {move_to}")
         if align_center:
             square_size = sizef_to_pointf(self.rect().size())
             pixmap_size = sizef_to_pointf(pixmap.boundingRect().size())
             move_to += (square_size - pixmap_size) * 0.5 
-            print(f"align: {move_to}")
         pixmap.setOffset(move_to)  # moves img of piece to sq
+
         self.piecePixmap = pixmap
 
     def getPiecePixmap(self):

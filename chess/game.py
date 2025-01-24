@@ -36,17 +36,17 @@ class ChessGame(QWidget):
         self.bKing = None
 
         # Make a board state
-        self.squares = [[], [], [], [], [], [], [], []]
+        self.squares: list[list] = [[], [], [], [], [], [], [], []]
         Squares.setSquares(self.squares)
-        self.pieces = []
+        self.pieces: list = []
         self.initializeBoardState()
 
-        self.layout = QHBoxLayout()
-        self.layout.setContentsMargins(0,0,0,0)
-        self.layout.setSpacing(0)
-        self.layout.addWidget(self.board, stretch=3)
-        self.layout.addWidget(self.gameInfo, stretch=1)
-        self.setLayout(self.layout)
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0,0,0,0)
+        layout.setSpacing(0)
+        layout.addWidget(self.board, stretch=3)
+        layout.addWidget(self.gameInfo, stretch=1)
+        self.setLayout(layout)
 
     def initializeBoardState(self):
         """Initializes the board state by creating all the squares
@@ -54,7 +54,7 @@ class ChessGame(QWidget):
         for i in range(8):
             for j in range(8):
                 sqName = self.coordToSquareName((i, j))
-                self.squares[i].append(Square((i, j), sqName))
+                self.squares[i].append(GameSquare((i, j), sqName))
 
         for i in range(8):
             # Piece instances save themselves as an attribute to
@@ -380,10 +380,10 @@ class MoveList(QFrame):
         label = QLabel("Moves")
         self.moveList, self.moveListLayout = self.createMoveList()
 
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(label, stretch=1, alignment=Qt.AlignCenter)
-        self.layout.addWidget(self.moveList, stretch=9)
-        self.setLayout(self.layout)
+        layout = QVBoxLayout()
+        layout.addWidget(label, stretch=1, alignment=Qt.AlignCenter)
+        layout.addWidget(self.moveList, stretch=9)
+        self.setLayout(layout)
 
     def createMoveList(self):
         """Creates frame that will hold move history"""
@@ -408,7 +408,7 @@ class MoveList(QFrame):
             self.moveListLayout.addWidget(label, self.row, 2)
             self.row += 1
 
-class Square:
+class GameSquare:
     """A detailed representation of a square that will hold
     info about the square's state"""
 

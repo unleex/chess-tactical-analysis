@@ -20,7 +20,7 @@ class MainWindow(QWidget):
             ):
         super().__init__()
         self.setWindowTitle("Maxwell's Chess Game")
-        self.setWindowState(Qt.WindowMaximized)
+        self.showMaximized()
 
         # ChessGame reference
         self.currentGame = None

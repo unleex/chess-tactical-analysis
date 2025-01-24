@@ -222,8 +222,11 @@ class Square(QGraphicsRectItem):
     clicks it."""
 
     def __init__(self, rect: QRectF, color: QColor, name):
+    def __init__(self, rect: QRectF, color: QColor, name):
         super().__init__(rect)
         self.name = name
+        self.piece: None | str = None
+        self.piecePixmap: None | QGraphicsPixmapItem = None
         self.piece: None | str = None
         self.piecePixmap: None | QGraphicsPixmapItem = None
 

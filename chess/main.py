@@ -1,14 +1,17 @@
+import logging.config
 import sys
 from game import ChessGame
 from PySide6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QApplication
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
+
 import logger
+import logging
 
 
 LIGHT_SQUARE_COLOR: QColor = QColor(220, 220, 220)
 DARK_SQUARE_COLOR: QColor = QColor(50, 50, 50)
-
+LOGGING_LEVEL = logging.DEBUG
 
 
 class MainWindow(QWidget):
@@ -54,6 +57,7 @@ class MainWindow(QWidget):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=LOGGING_LEVEL, format="[5%(filename)s:%(lineno)s - %(funcName)s ()]: %(message)s")
     app = QApplication([])
     app.aboutToQuit.connect(logger.closeLog)
 

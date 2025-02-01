@@ -2,16 +2,20 @@
 from __future__ import annotations
 import resources
 import os
+from logging import getLogger
 
+from interface import BoardToGameInterface
+from special_moves import Promotion
+from pieces import Piece
 
 from PySide6.QtCore import Qt, QSize, QRectF, QPointF, QSizeF
 from PySide6.QtGui import QBrush, QPixmap, QColor
 from PySide6.QtWidgets import (QGraphicsScene, QGraphicsView,
     QGraphicsRectItem, QGraphicsPixmapItem)
 from PySide6.QtWidgets import QGraphicsSceneMouseEvent
-from interface import BoardToGameInterface
-from special_moves import Promotion
 
+
+logger = getLogger(__name__)
 
 # Create a list with the names of each square starting from
 # [a8, b8, ..., h8, a7, b7, ..., h7, etc..]
@@ -156,6 +160,7 @@ class BoardScene(QGraphicsScene):
     def movePiece(self, squares):
         """Move piece from squares[0] to squares[1]"""
         from_sq, to_sq = self.squares[squares[0]], self.squares[squares[1]]
+        logger.debug(f"Moving {from_sq.getPiece()} from {str(from_sq)} to {str(to_sq)}")
         from_sq.movePieceTo(to_sq)
 
         self.unhighlightSquares()
@@ -234,6 +239,7 @@ class Square(QGraphicsRectItem):
         """When a square is clicked and there is a piece on that square,
         this function will highlight the squares that the piece can move
         to."""
+        logger.debug(f"Received click on square")
         scene: BoardScene = self.scene() # type: ignore[assignment]
         # Don't let squares be clicked if there is a pawn promoting.
         if scene.promotionDialogShown:
@@ -244,23 +250,35 @@ class Square(QGraphicsRectItem):
 
         # Check result to know what to do
         if (action := result["action"]) == "highlightSquares":
+            logger.debug(f"Highlighting squares: {result["squares"]}")
             scene.highlightSquares(result["squares"])
-        elif action == "movePiece":
-            scene.movePiece(result["squares"])
+        elif action == "showPromotionDialog":
+            logger.debug(f"Promotion")
+            scene.showPromotionDialog(result["state"])
         elif action == "unhighlightSquares":
+            logger.debug(f"Unighlighting squares")
+        # below are moving actions
+        elif (BoardToGameInterface.CURRENT_GAME.selectedPiece 
+            and 
+            not BoardToGameInterface.CURRENT_GAME.selectedPiece.canMoveTo(result["squares"][1])
+            ):
+            return super().mousePressEvent(event)
+        elif action == "movePiece":
+            logger.debug(f"Moving piece: {result["squares"]}")
+            scene.movePiece(result["squares"])
             scene.unhighlightSquares()
         elif action == "castle":
+            logger.debug(f"Castling")
             scene.movePiece(result["kingMove"])
             scene.movePiece(result["rookMove"])
         elif action == "enPassant":
+            logger.debug(f"En passant")
             scene.movePiece(result["squares"])
             scene.removePiece(result["take"])
-        elif action == "showPromotionDialog":
-            scene.showPromotionDialog(result["state"])
 
         return super().mousePressEvent(event)
 
-    def setPiece(self, piece: str | None, pixmap: QGraphicsPixmapItem | None):
+    def setPiece(self, piece: Piece | None, pixmap: QGraphicsPixmapItem | None):
         """Sets a piece to this square. Has the effect of visually moving
         the piece to this square on the board."""
         # Must come first, as it checks the current value of self.piece

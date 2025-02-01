@@ -270,15 +270,8 @@ class Piece():
 
     def canMoveTo(self, square):
         """Checks if square is in this Piece's move list"""
-        bking = BoardToGameInterface.CURRENT_GAME.bKing
-        wking = BoardToGameInterface.CURRENT_GAME.wKing
-        if (self.isSameColorAs(bking) and bking.checked
-        or self.isSameColorAs(wking) and wking.checked
-        ):
-            moves = set(self.pinnedTo).intersection(set(self.moves))
-            stdlogger.debug(f"Pinned {str(self)} can move to {str(square)}: {square in moves}")
-            return square in moves
-        stdlogger.debug(f"{str(self)} can move to {str(square)}: {square in self.moves}")
+        stdlogger.debug(f"{str(self)} can move to {str(square)}: {square in self.getMoves()}")
+        return square in self.getMoves()
         return square in self.moves
 
 

@@ -261,7 +261,7 @@ class Piece():
             moves = self.moves.copy()
             moves.extend(self.castleMoves)
 
-        stdlogger.debug(f"Available moves for {repr(self)}: {list(map(str,moves))}")
+        stdlogger.debug(f"Available moves for {repr(self)}: {list(map(str, moves))}")
 
         if nameOnly:
             # Square.__str__ simply returns the name of a square
@@ -272,7 +272,6 @@ class Piece():
         """Checks if square is in this Piece's move list"""
         stdlogger.debug(f"{str(self)} can move to {str(square)}: {square in self.getMoves()}")
         return square in self.getMoves()
-        return square in self.moves
 
 
 class King(Piece):

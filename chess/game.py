@@ -8,7 +8,9 @@ import pieces
 from squares import Squares
 from special_moves import Castle, EnPassant
 import logger
+
 from logging import getLogger
+import typing
 
 stdlogger = getLogger(__name__)
 
@@ -376,9 +378,18 @@ class GameInfo(QFrame):
 class MoveList(QFrame):
     """Widget that shows move history of a game"""
 
-    def __init__(self):
+    def __init__(self, move_log: typing.Optional[list[tuple[str, str]]]=None):
+        """
+        Parameters
+        ----------
+        move_log: list of tuples[str, str] (optional)
+            History of moves, each element of which is pair of White's and Black's moves.
+            Defaults to empty.
+        """
         super().__init__()
-        self.setFrameStyle(QFrame.Panel | QFrame.Raised)
+        _move_log = move_log if move_log is not None else []
+        self.move_log = _move_log
+        self.setFrameStyle(QFrame.Shape.Panel | QFrame.Shadow.Raised)
         self.setLineWidth(3)
 
         # Row number for the move list (increments after black's turn)
@@ -388,9 +399,12 @@ class MoveList(QFrame):
         self.moveList, self.moveListLayout = self.createMoveList()
 
         layout = QVBoxLayout()
-        layout.addWidget(label, stretch=1, alignment=Qt.AlignCenter)
+        layout.addWidget(label, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.moveList, stretch=9)
         self.setLayout(layout)
+        for move_pair in _move_log:
+            for move, is_white in zip(move_pair, (True, False)):
+                self.addMove(move, is_white)
 
     def createMoveList(self):
         """Creates frame that will hold move history"""
@@ -411,9 +425,11 @@ class MoveList(QFrame):
         if isWhite:
             self.moveListLayout.addWidget(turnLabel, self.row, 0)
             self.moveListLayout.addWidget(label, self.row, 1)
+            self.move_log.append((move, "..."))
         else:
             self.moveListLayout.addWidget(label, self.row, 2)
             self.row += 1
+            self.move_log[-1] = (self.move_log[-1][0], move)
 
 class GameSquare:
     """A detailed representation of a square that will hold

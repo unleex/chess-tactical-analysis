@@ -1,16 +1,23 @@
-from PySide6.QtWidgets import (QWidget, QHBoxLayout, QFrame, QLabel,
-                               QGridLayout, QVBoxLayout)
-from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt
-from board import BoardView, Square
-from interface import BoardToGameInterface
-import pieces
-from squares import Squares
-from special_moves import Castle, EnPassant
-import logger
+import typing
 
 from logging import getLogger
-import typing
+
+import logger
+import pieces
+from board import BoardView, Square
+from interface import BoardToGameInterface
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import (
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QVBoxLayout,
+    QWidget,
+)
+from special_moves import Castle, EnPassant
+from squares import Squares
 
 stdlogger = getLogger(__name__)
 

@@ -1,12 +1,12 @@
+import logging
 import logging.config
 import sys
-from game import ChessGame
-from PySide6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QApplication
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor
 
 import logger
-import logging
+from game import ChessGame
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
 
 
 LIGHT_SQUARE_COLOR: QColor = QColor(220, 220, 220)

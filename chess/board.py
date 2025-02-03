@@ -1,18 +1,24 @@
 """This module handles the drawing of the board and its pieces."""
 from __future__ import annotations
-import resources
+
 import os
 from logging import getLogger
 
+import resources
+
 from interface import BoardToGameInterface
-from special_moves import Promotion
 from pieces import Piece
 
-from PySide6.QtCore import Qt, QSize, QRectF, QPointF, QSizeF
-from PySide6.QtGui import QBrush, QPixmap, QColor
-from PySide6.QtWidgets import (QGraphicsScene, QGraphicsView,
-    QGraphicsRectItem, QGraphicsPixmapItem)
-from PySide6.QtWidgets import QGraphicsSceneMouseEvent
+from PySide6.QtCore import QPointF, QRectF, QSize, QSizeF, Qt
+from PySide6.QtGui import QBrush, QColor, QPixmap
+from PySide6.QtWidgets import (
+    QGraphicsPixmapItem,
+    QGraphicsRectItem,
+    QGraphicsScene,
+    QGraphicsSceneMouseEvent,
+    QGraphicsView,
+)
+from special_moves import Promotion
 
 
 logger = getLogger(__name__)

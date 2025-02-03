@@ -1,10 +1,10 @@
 """This module defines classes for every type of chess piece"""
-import logger
-from squares import Squares
-from special_moves import Castle, EnPassant
-from interface import BoardToGameInterface
-
 from logging import getLogger
+
+import logger
+from interface import BoardToGameInterface
+from special_moves import Castle, EnPassant
+from squares import Squares
 
 stdlogger = getLogger(__name__)
 

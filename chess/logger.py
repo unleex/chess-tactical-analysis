@@ -1,16 +1,19 @@
 """Module that will log certain activities in another file"""
-
+import typing
+if typing.TYPE_CHECKING:
+    import pieces
+    from game import GameSquare
 print("Opening log file...")
 LOG_FILE = open("logs/logs.txt", "w", )
 BOARD_LOG_FILE = open("logs/board_logs.txt", "w")
 
-def pieceUpdatedSquares(piece):
+def pieceUpdatedSquares(piece: "pieces.Piece"):
     """Shows that piece was updated and its current state"""
     toLog = f"UPDATED {piece.name}\n" + str(piece) + '\n'
     LOG_FILE.write(toLog)
     LOG_FILE.flush()
 
-def pieceMoved(piece, piecesToUpdate=None):
+def pieceMoved(piece: "pieces.Piece", piecesToUpdate=None):
     """Shows that a piece has moved. If piecesToUpdate is not None, this
     marks the start of updates. If None, it marks the end of updates."""
     if piecesToUpdate is not None:
@@ -21,7 +24,7 @@ def pieceMoved(piece, piecesToUpdate=None):
     LOG_FILE.write(toLog)
     LOG_FILE.flush()
 
-def showBoard(squares):
+def showBoard(squares: list[list['GameSquare']]):
     """Shows every square and the pieces that control them"""
     # Clear file first so it only shows latest board
     BOARD_LOG_FILE.truncate(0)

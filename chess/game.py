@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 from special_moves import Castle, EnPassant
 from squares import Squares
+import engine
 
 stdlogger = getLogger(__name__)
 
@@ -26,7 +27,8 @@ class ChessGame(QWidget):
     def __init__(
             self,
             light_square_color: QColor,
-            dark_square_color: QColor
+            dark_square_color: QColor,
+            stockfish_engine: typing.Optional[engine.Engine] = None
             ):
         super().__init__()
 
@@ -50,7 +52,7 @@ class ChessGame(QWidget):
         # Make a board state
         self.squares: list[list[GameSquare]] = [[], [], [], [], [], [], [], []]
         Squares.setSquares(self.squares)
-        self.pieces: list = []
+        self.pieces: list[pieces.Piece] = []
         self.initializeBoardState()
 
         layout = QHBoxLayout()
@@ -59,6 +61,8 @@ class ChessGame(QWidget):
         layout.addWidget(self.board, stretch=3)
         layout.addWidget(self.gameInfo, stretch=1)
         self.setLayout(layout)
+
+        self.engine = stockfish_engine
 
     def initializeBoardState(self):
         """Initializes the board state by creating all the squares
@@ -111,7 +115,7 @@ class ChessGame(QWidget):
             piece.updateSquares(init=True)
         logger.showBoard(self.squares)
 
-    def squareNameToCoord(self, squareName):
+    def squareNameToCoord(self, squareName: str):
         """Convert a square's name (eg. a1) to indexes for the square
         on self.squares"""
         letters = "abcdefgh"
@@ -121,7 +125,7 @@ class ChessGame(QWidget):
 
         return letterCoord, numCoord
 
-    def coordToSquareName(self, coord):
+    def coordToSquareName(self, coord: tuple[int, int]):
         """Convert a square's index in self.squares (nicknamed coords),
         to the traditional square names in chess (eg. a1, b2)"""
         letters = "abcdefgh"
@@ -129,7 +133,7 @@ class ChessGame(QWidget):
         sqName = letters[coord[0]] + str(coord[1] + 1)
         return sqName
 
-    def pawnPromoted(self, promotedTo):
+    def pawnPromoted(self, promotedTo: str):
         """When user selects a piece for the promoting pawn to promote
         to."""
         if promotedTo[0] == "w":
@@ -138,19 +142,19 @@ class ChessGame(QWidget):
             isWhite = False
         
         if promotedTo[1:] == "Queen":
-            newPiece = pieces.Queen(
+            pieces.Queen(
                 isWhite=isWhite, square=self.promotionSquares[1], promotion=True
             )
         elif promotedTo[1:] == "Rook":
-            newPiece = pieces.Rook(
+            pieces.Rook(
                 isWhite=isWhite, square=self.promotionSquares[1], promotion=True
             )
         elif promotedTo[1:] == "Knight":
-            newPiece = pieces.Knight(
+            pieces.Knight(
                 isWhite=isWhite, square=self.promotionSquares[1], promotion=True
             )
         elif promotedTo[1:] == "Bishop":
-            newPiece = pieces.Bishop(
+            pieces.Bishop(
                 isWhite=isWhite, square=self.promotionSquares[1], promotion=True
             )
 
@@ -240,6 +244,8 @@ class ChessGame(QWidget):
                 if moveType == "promotion":
                     self.promotionSquares = (old_sq, sq)
                     self.promotionOnCapture = False
+                    if self.engine:
+                        self.engine.add_move(old_sq + sq)
                     return {
                         "action": "showPromotionDialog",
                         "state": (str(old_sq), str(sq), turn)
@@ -254,6 +260,8 @@ class ChessGame(QWidget):
                         self.createMoveName(old_sq, sq, capture=False, **checked),
                         turn
                     )
+                    if self.engine:
+                        self.engine.add_move(old_sq + sq)
                     return {
                         "action": "movePiece",
                         "squares": [str(old_sq), str(sq)]
@@ -264,6 +272,8 @@ class ChessGame(QWidget):
                         self.createMoveName(old_sq, sq, capture=False, castle=moveType[1]),
                         turn
                     )
+                    if self.engine:
+                        self.engine.add_move(old_sq + sq)
                     return {
                         "action": "castle",
                         "kingMove": [str(old_sq), str(sq)],
@@ -271,6 +281,8 @@ class ChessGame(QWidget):
                     }
 
                 elif moveType[0] == "enPassant":
+                    if self.engine:
+                        self.engine.add_move(old_sq + sq)
                     self.gameInfo.moveList.addMove(
                         self.createMoveName(old_sq, sq, capture=True),
                         turn

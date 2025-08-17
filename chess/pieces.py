@@ -5,14 +5,18 @@ import logger
 from interface import BoardToGameInterface
 from special_moves import Castle, EnPassant
 from squares import Squares
+import typing
+if typing.TYPE_CHECKING:
+    from game import GameSquare
 
 stdlogger = getLogger(__name__)
 
 class Piece():
     """Base class for all pieces"""
 
-    def __init__(self, isWhite, square):
+    def __init__(self, isWhite: bool, square: 'GameSquare') -> None:
         pieceType = type(self)
+        self.name: str
         if isWhite:
             self.name = "w" + pieceType.pieceName + str(pieceType.w_id)
             pieceType.w_id += 1
@@ -21,7 +25,7 @@ class Piece():
             pieceType.b_id += 1
 
         self.isWhite = isWhite
-        self.trackedSquares = []
+        self.trackedSquares: list['GameSquare'] = []
         self.moves = []
         self.nonMovesControlledSquares = []
         self.pinning = None
@@ -40,15 +44,15 @@ class Piece():
             self.unpinPiece()
         self.captured = True
 
-    def addTrackedSquare(self, square):
+    def addTrackedSquare(self, square: 'GameSquare'):
         self.trackedSquares.append(square)
         square.addTrackingPiece(self)
 
-    def addNonMoveControlledSquare(self, square):
+    def addNonMoveControlledSquare(self, square: 'GameSquare'):
         self.nonMovesControlledSquares.append(square)
         square.addControllingPiece(self)
 
-    def setSquare(self, square):
+    def setSquare(self, square: 'GameSquare'):
         """Sets a square to this piece. Called when this piece moves to
         another square"""
         # Clear tracked squares so piece won't appear on newSquareTrackers

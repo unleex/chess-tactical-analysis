@@ -4,7 +4,6 @@ from __future__ import annotations
 import os
 from logging import getLogger
 
-import resources
 
 from interface import BoardToGameInterface
 from pieces import Piece
@@ -54,27 +53,27 @@ class BoardScene(QGraphicsScene):
     # Make a little smaller than the view for some margins
     SCENE_SIZE = QSize(555, 555)
     SQUARE_SIZE: QSize = SCENE_SIZE / 8 # type: ignore
-    PIECE_SIZE = SQUARE_SIZE - QSize(10, 10) # type: ignore
+    PIECE_SIZE: QSize = SQUARE_SIZE - QSize(10, 10) # type: ignore
 
-    INITIAL_POS = {
-        "wRook": ("a1", "h1"),
-        "wKnight": ("b1", "g1"),
-        "wBishop": ("c1", "f1"),
-        "wQueen": ("d1",),
-        "wKing": ("e1",),
-        "wPawn": ("a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2"),
-        "bRook": ("a8", "h8"),
-        "bKnight": ("b8", "g8"),
-        "bBishop": ("c8", "f8"),
-        "bQueen": ("d8",),
-        "bKing": ("e8",),
-        "bPawn": ("a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7"),
+    INITIAL_POS: dict[str, list[str]] = {
+        "wRook": ["a1", "h1"],
+        "wKnight": ["b1", "g1"],
+        "wBishop": ["c1", "f1"],
+        "wQueen": ["d1"],
+        "wKing": ["e1"],
+        "wPawn": ["a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2"],
+        "bRook": ["a8", "h8"],
+        "bKnight": ["b8", "g8"],
+        "bBishop": ["c8", "f8"],
+        "bQueen": ["d8"],
+        "bKing": ["e8"],
+        "bPawn": ["a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7"],
     }
 
     def __init__(
             self, 
-            light_color,
-            dark_color
+            light_color: QColor,
+            dark_color: QColor
         ):
         super().__init__()
         self.setSceneRect(
@@ -91,7 +90,7 @@ class BoardScene(QGraphicsScene):
         self.drawPiecesInInitialPos()
 
         # Util variables
-        self.highlightedSquares = []
+        self.highlightedSquares: list[Square] = []
 
         self.promotionDialogShown = False
 
@@ -102,7 +101,7 @@ class BoardScene(QGraphicsScene):
         ) -> dict[str, Square]:
         """Create Square objects for every square on the board and put
         them in a dictionary."""
-        squares = {}
+        squares: dict[str, Square] = {}
         squareNames = iter(SQUARE_NAMES)
         whiteOnEven = True
         # row height and col width are the same
@@ -176,7 +175,7 @@ class BoardScene(QGraphicsScene):
         self.removeItem(sq.getPiecePixmap())
         sq.setPiece(None, None)
 
-    def showPromotionDialog(self, state):
+    def showPromotionDialog(self, state: tuple):
         """When a pawn reaches the 1st or 8th rank, this shows a screen
         that lets the user pick what piece they want to promote the
         pawn to.
@@ -197,7 +196,7 @@ class BoardScene(QGraphicsScene):
         center = self.sceneRect().center() - QPointF((1/2)*x, (1/2)*y)
         self.promotionDialog.setPos(center)
 
-    def promotePawn(self, state, promoteTo):
+    def promotePawn(self, state, promoteTo: str):
         """Promotes a pawn to promoteTo"""
         self.promotionDialogShown = False
         self.removeItem(self.promotionDialog)
@@ -220,7 +219,6 @@ class BoardScene(QGraphicsScene):
         i = 1
         for name in self.squares:
             end = '\t' if i % 8 != 0 else '\n'
-            piece = self.squares[name].getPiece()
             print(name + ': ' + str(self.squares[name].getPiece()), end=end)
             i += 1
         print('-' * 20)
@@ -232,7 +230,7 @@ class Square(QGraphicsRectItem):
     piece that is on it and has mouse events to handle when the user
     clicks it."""
 
-    def __init__(self, rect: QRectF, color: QColor, name):
+    def __init__(self, rect: QRectF, color: QColor, name: str):
         super().__init__(rect)
         self.name = name
         self.piece: None | str = None
@@ -295,7 +293,7 @@ class Square(QGraphicsRectItem):
     def getPiece(self):
         return self.piece
 
-    def movePieceTo(self, square_to: Square, promotingTo=None):
+    def movePieceTo(self, square_to: Square, promotingTo: Piece | None =None):
         """Moves the piece on this square to another square"""
         piece, pixmap = self.piece, self.piecePixmap
         self.piece = self.piecePixmap = None

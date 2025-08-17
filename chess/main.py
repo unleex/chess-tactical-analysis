@@ -1,10 +1,8 @@
 import logging
-import logging.config
 import sys
-
+import resources # type: ignore # this must be imported to initialize all images
 import logger
 from game import ChessGame
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
 

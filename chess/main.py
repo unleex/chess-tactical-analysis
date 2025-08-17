@@ -5,12 +5,11 @@ import logger
 from game import ChessGame
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
-
-
+from engine import Engine
 LIGHT_SQUARE_COLOR: QColor = QColor(220, 220, 220)
 DARK_SQUARE_COLOR: QColor = QColor(50, 50, 50)
 LOGGING_LEVEL = logging.DEBUG
-
+STOCKFISH_ENGINE_PATH = '/opt/homebrew/bin/stockfish'
 
 class MainWindow(QWidget):
 
@@ -41,7 +40,8 @@ class MainWindow(QWidget):
         self.emptyWindow()
         self.currentGame = ChessGame(
             light_square_color=self.light_square_color,
-            dark_square_color=self.dark_square_color
+            dark_square_color=self.dark_square_color,
+            stockfish_engine=Engine(STOCKFISH_ENGINE_PATH, 4)
         )
         # Add game screen to window
         self.mainLayout.addWidget(self.currentGame)

@@ -261,7 +261,7 @@ class ChessGame(QWidget):
                         turn
                     )
                     if self.engine:
-                        self.engine.add_move(old_sq + sq)
+                        self.engine.add_move(str(old_sq) + str(sq))
                     return {
                         "action": "movePiece",
                         "squares": [str(old_sq), str(sq)]
@@ -302,6 +302,8 @@ class ChessGame(QWidget):
             # After every turn, one of the kings will have their squares
             # updated, as they could be restricted at any time and their
             # trackedSquares list is not enough to keep up.
+            if self.engine:
+                print('\n\nENGINE BEST MOVE\n', self.engine.get_best_move())
             if self.whiteTurn:
                 self.bKing.updateSquares()
             else:
@@ -381,6 +383,8 @@ class ChessGame(QWidget):
             suffix += '+'
 
         return prefix + str(newSquare) + suffix
+    
+    def showBestMoveArrow(self, square_from, square_to):
 
 
 class GameInfo(QFrame):

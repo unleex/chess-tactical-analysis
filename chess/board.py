@@ -5,7 +5,7 @@ import os
 from logging import getLogger
 
 
-from interface import BoardToGameInterface
+from interface import Interface
 from pieces import Piece
 
 from PySide6.QtCore import QPointF, QRectF, QSize, QSizeF, Qt
@@ -108,6 +108,8 @@ class BoardScene(QGraphicsScene):
         rowHeight = self.SQUARE_SIZE.height()
         rowCoord = [(x * rowHeight) for x in range(0, 8)]
         colCoord = [(y, y * rowHeight) for y in range(0, 8)]
+        self.rowCoord = rowCoord
+        self.colCoord = colCoord
 
         for row in rowCoord:
             # At each row, white squares will be on the even numbered cols
@@ -211,7 +213,7 @@ class BoardScene(QGraphicsScene):
         from_sq.movePieceTo(to_sq, promotingTo=promoteTo)
         self.unhighlightSquares()
 
-        BoardToGameInterface.pawnPromoted(promoteTo)
+        Interface.pawnPromoted(promoteTo)
 
     def printSquares(self):
         """Prints all the squares and the pieces on each square.
@@ -249,7 +251,7 @@ class Square(QGraphicsRectItem):
         if scene.promotionDialogShown:
             return super().mousePressEvent(event)
         # Let the game know this square has been clicked
-        result = BoardToGameInterface.squareClicked(
+        result = Interface.squareClicked(
             self.name)
 
         # Check result to know what to do
@@ -262,9 +264,9 @@ class Square(QGraphicsRectItem):
         elif action == "unhighlightSquares":
             logger.debug(f"Unighlighting squares")
         # below are moving actions
-        elif (BoardToGameInterface.CURRENT_GAME.selectedPiece 
+        elif (Interface.CURRENT_GAME.selectedPiece 
             and 
-            not BoardToGameInterface.CURRENT_GAME.selectedPiece.canMoveTo(result["squares"][1])
+            not Interface.CURRENT_GAME.selectedPiece.canMoveTo(result["squares"][1])
             ):
             return super().mousePressEvent(event)
         elif action == "movePiece":

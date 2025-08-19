@@ -1,11 +1,17 @@
 import logging
 import sys
+
+from PySide6.QtCore import PyClassProperty
 import resources # type: ignore # this must be imported to initialize all images
 import logger
 from game import ChessGame
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
 from engine import Engine
+from interface import Interface
+from PySide6.QtCore import Qt
+
+
 LIGHT_SQUARE_COLOR: QColor = QColor(220, 220, 220)
 DARK_SQUARE_COLOR: QColor = QColor(50, 50, 50)
 LOGGING_LEVEL = logging.DEBUG
@@ -54,6 +60,8 @@ class MainWindow(QWidget):
             widget.destroy()
 
 
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=LOGGING_LEVEL, format="[5%(filename)s:%(lineno)s - %(funcName)s ()]: %(message)s")
     app = QApplication([])
@@ -63,6 +71,7 @@ if __name__ == "__main__":
         light_square_color=LIGHT_SQUARE_COLOR,
         dark_square_color=DARK_SQUARE_COLOR
     )
+    Interface.setCurrentWindow(main)
     main.show()
 
     sys.exit(app.exec())

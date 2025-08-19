@@ -17,7 +17,6 @@ class Engine:
             depth=depth
         )
         _move_history = move_history if move_history is not None else []
-        self._move_history: list[str] = _move_history
         self.stockfish.set_position(_move_history)
     
     def add_move(self, move: str):

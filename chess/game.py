@@ -4,10 +4,10 @@ from logging import getLogger
 
 import logger
 import pieces
-from board import BoardView, Square
-from interface import BoardToGameInterface
+from board import BoardScene, BoardView, Square
+from interface import Interface
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QPen
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 from special_moves import Castle, EnPassant
 from squares import Squares
 import engine
+from PySide6.QtWidgets import QGraphicsLineItem
 
 stdlogger = getLogger(__name__)
 
@@ -32,7 +33,7 @@ class ChessGame(QWidget):
             ):
         super().__init__()
 
-        BoardToGameInterface.setCurrentGame(self)
+        Interface.setCurrentGame(self)
 
         # Widgets
         self.board = BoardView(
@@ -63,6 +64,8 @@ class ChessGame(QWidget):
         self.setLayout(layout)
 
         self.engine = stockfish_engine
+        # Track the currently drawn best-move arrow so we can update/clear it
+        self._best_move_arrow: QGraphicsLineItem | None = None
 
     def initializeBoardState(self):
         """Initializes the board state by creating all the squares
@@ -174,7 +177,6 @@ class ChessGame(QWidget):
 
         self.promotionSquares = None
 
-
     def squareClicked(self, squareName: str):
         """""" 
         coord = self.squareNameToCoord(squareName)
@@ -197,13 +199,16 @@ class ChessGame(QWidget):
                 turn = self.whiteTurn
 
                 if moveType == "promotion":
+                    if self.engine:
+                        self.engine.add_move(str(old_sq), str(sq))
                     self.promotionSquares = (old_sq, sq)
                     self.promotionOnCapture = True
                     return {
                         "action": "showPromotionDialog",
                         "state": (str(old_sq), str(sq), turn)
                     }
-                
+                if self.engine:
+                    self.engine.add_move(str(old_sq) + str(sq))
                 self.nextTurn()
                 # Checks if a king is checked and whether it is checkmate
                 # or not.
@@ -245,12 +250,14 @@ class ChessGame(QWidget):
                     self.promotionSquares = (old_sq, sq)
                     self.promotionOnCapture = False
                     if self.engine:
-                        self.engine.add_move(old_sq + sq)
+                        self.engine.add_move(str(old_sq) + str(sq))
                     return {
                         "action": "showPromotionDialog",
                         "state": (str(old_sq), str(sq), turn)
                     }
-                
+                if self.engine:
+                    self.engine.add_move(str(old_sq) + str(sq))
+
                 self.nextTurn()
                 
                 checked = self.check()
@@ -260,8 +267,7 @@ class ChessGame(QWidget):
                         self.createMoveName(old_sq, sq, capture=False, **checked),
                         turn
                     )
-                    if self.engine:
-                        self.engine.add_move(str(old_sq) + str(sq))
+                    
                     return {
                         "action": "movePiece",
                         "squares": [str(old_sq), str(sq)]
@@ -272,8 +278,7 @@ class ChessGame(QWidget):
                         self.createMoveName(old_sq, sq, capture=False, castle=moveType[1]),
                         turn
                     )
-                    if self.engine:
-                        self.engine.add_move(old_sq + sq)
+                    
                     return {
                         "action": "castle",
                         "kingMove": [str(old_sq), str(sq)],
@@ -281,8 +286,7 @@ class ChessGame(QWidget):
                     }
 
                 elif moveType[0] == "enPassant":
-                    if self.engine:
-                        self.engine.add_move(old_sq + sq)
+                    
                     self.gameInfo.moveList.addMove(
                         self.createMoveName(old_sq, sq, capture=True),
                         turn
@@ -298,12 +302,17 @@ class ChessGame(QWidget):
                 # Just unhighlight any highlighted squares, if any.
                 return {"action": "unhighlightSquares"}
 
+
     def nextTurn(self):
             # After every turn, one of the kings will have their squares
             # updated, as they could be restricted at any time and their
             # trackedSquares list is not enough to keep up.
             if self.engine:
-                print('\n\nENGINE BEST MOVE\n', self.engine.get_best_move())
+                best_move = self.engine.get_best_move()
+                if best_move is not None : # otherwise it's mate
+                    self.showBestMoveArrow(best_move[:2], best_move[2:]) # format is like f1f3
+            
+            
             if self.whiteTurn:
                 self.bKing.updateSquares()
             else:
@@ -384,8 +393,34 @@ class ChessGame(QWidget):
 
         return prefix + str(newSquare) + suffix
     
-    def showBestMoveArrow(self, square_from, square_to):
+    def showBestMoveArrow(self, square_from: str, square_to: str):
 
+        # Draw a persistent arrow (line) on the board scene between square centers.
+        # Clear previous arrow if present.
+        board: BoardScene = self.board.scene() # type: ignore # scene is explicitly set to BoardScene
+        if self._best_move_arrow is not None:
+            try:
+                board.removeItem(self._best_move_arrow)
+            except Exception:
+                pass
+            self._best_move_arrow = None
+
+        # Resolve square centers
+        from_sq = board.squares.get(square_from)
+        to_sq = board.squares.get(square_to)
+        if from_sq is None or to_sq is None:
+            return
+        p1 = from_sq.getCenter()
+        p2 = to_sq.getCenter()
+
+        pen = QPen(QColor(255, 0, 0, 200))  # semi-transparent red
+        pen.setWidth(4)
+        pen.setCapStyle(Qt.RoundCap)
+        pen.setJoinStyle(Qt.RoundJoin)
+
+        self._best_move_arrow = board.addLine(p1.x(), p1.y(), p2.x(), p2.y(), pen)
+    
+    
 
 class GameInfo(QFrame):
 

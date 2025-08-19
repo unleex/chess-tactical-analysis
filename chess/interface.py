@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from PySide6.QtWidgets import QWidget
 if TYPE_CHECKING:
     from game import ChessGame
 
-class BoardToGameInterface:
+class Interface:
     """Class that allows BoardView and Square class to communicate with
     ChessGame, without having to hold a reference to it.
     
@@ -23,6 +24,10 @@ class BoardToGameInterface:
         game.check
 
     @classmethod
+    def setCurrentWindow(cls, window: QWidget):
+        cls.window = window
+        
+    @classmethod
     def isWhiteTurn(cls):
         """Called by Squares when they are clicked and want to know if
         they're the enemy piece"""
@@ -37,3 +42,5 @@ class BoardToGameInterface:
     def pawnPromoted(cls, promotedTo):
         """Called when the user decides what promote"""
         return cls.CURRENT_GAME.pawnPromoted(promotedTo)
+
+    

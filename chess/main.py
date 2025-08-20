@@ -1,20 +1,38 @@
+import logging
 import sys
-from game import ChessGame
-from PySide6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QApplication
-from PySide6.QtCore import Qt
-import logger
 
+from PySide6.QtCore import PyClassProperty
+import resources # type: ignore # this must be imported to initialize all images
+import logger
+from game import ChessGame
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
+from engine import Engine
+from interface import Interface
+from PySide6.QtCore import Qt
+
+
+LIGHT_SQUARE_COLOR: QColor = QColor(220, 220, 220)
+DARK_SQUARE_COLOR: QColor = QColor(50, 50, 50)
+LOGGING_LEVEL = logging.DEBUG
+STOCKFISH_ENGINE_PATH = '/opt/homebrew/bin/stockfish'
 
 class MainWindow(QWidget):
 
-    def __init__(self):
+    def __init__(
+            self,
+            light_square_color: QColor,
+            dark_square_color: QColor
+            ):
         super().__init__()
         self.setWindowTitle("Maxwell's Chess Game")
-        self.setWindowState(Qt.WindowMaximized)
+        self.showMaximized()
 
         # ChessGame reference
         self.currentGame = None
-    
+
+        self.light_square_color = light_square_color
+        self.dark_square_color = dark_square_color
         # New game button
         newGameBtn = QPushButton("New Game")
         newGameBtn.clicked.connect(self.startNewGame)
@@ -26,7 +44,11 @@ class MainWindow(QWidget):
         
     def startNewGame(self):
         self.emptyWindow()
-        self.currentGame = ChessGame()
+        self.currentGame = ChessGame(
+            light_square_color=self.light_square_color,
+            dark_square_color=self.dark_square_color,
+            stockfish_engine=Engine(STOCKFISH_ENGINE_PATH, 4)
+        )
         # Add game screen to window
         self.mainLayout.addWidget(self.currentGame)
 
@@ -38,11 +60,18 @@ class MainWindow(QWidget):
             widget.destroy()
 
 
+
+
 if __name__ == "__main__":
+    logging.basicConfig(level=LOGGING_LEVEL, format="[5%(filename)s:%(lineno)s - %(funcName)s ()]: %(message)s")
     app = QApplication([])
     app.aboutToQuit.connect(logger.closeLog)
 
-    main = MainWindow()
+    main = MainWindow(
+        light_square_color=LIGHT_SQUARE_COLOR,
+        dark_square_color=DARK_SQUARE_COLOR
+    )
+    Interface.setCurrentWindow(main)
     main.show()
 
     sys.exit(app.exec())

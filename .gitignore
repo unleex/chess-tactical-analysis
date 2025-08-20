@@ -1,2 +1,6 @@
 __pycache__/
 .venv/
+logs/*
+.vscode
+chess/test.py
+stockfish_

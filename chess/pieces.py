@@ -2,7 +2,6 @@
 from logging import getLogger
 
 import logger
-from interface import Interface
 from special_moves import Castle, EnPassant
 from squares import Squares
 import typing
